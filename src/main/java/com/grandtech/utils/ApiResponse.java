@@ -1,4 +1,4 @@
-package com.grandtech;
+package com.grandtech.utils;
 
 /**
  * Standard envelope returned by every API endpoint.

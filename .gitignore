@@ -43,3 +43,6 @@ nb-configuration.xml
 /.quarkus/cli/plugins/
 # TLS Certificates
 .certs/
+
+# Firebase service-account credentials (never commit these)
+*firebase-adminsdk*.json
