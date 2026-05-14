@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- Lines must not exceed 120 characters -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+    </module>
+
+    <module name="TreeWalker">
+
+        <!-- All types (classes, interfaces, enums, annotations) must have Javadoc -->
+        <module name="MissingJavadocType">
+            <property name="scope" value="private"/>
+        </module>
+
+        <!-- All methods (including private) must have Javadoc -->
+        <module name="MissingJavadocMethod">
+            <property name="scope" value="private"/>
+        </module>
+
+        <!-- Javadoc must include @param for each parameter and @return for non-void methods -->
+        <module name="JavadocMethod">
+            <property name="accessModifiers" value="public, protected, package, private"/>
+        </module>
+
+        <!-- All fields / global variables must have Javadoc -->
+        <module name="JavadocVariable">
+            <property name="scope" value="private"/>
+        </module>
+
+        <!-- Methods must not exceed 50 lines (blank lines excluded) -->
+        <module name="MethodLength">
+            <property name="max" value="50"/>
+            <property name="countEmpty" value="false"/>
+        </module>
+
+    </module>
+</module>
