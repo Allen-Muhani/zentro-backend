@@ -1,36 +1,34 @@
 package com.grandtech.model
 
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheCompanion
-import io.quarkus.hibernate.orm.panache.kotlin.PanacheEntity
-import jakarta.persistence.Column
-import jakarta.persistence.DiscriminatorColumn
-import jakarta.persistence.DiscriminatorType
-import jakarta.persistence.Entity
-import jakarta.persistence.Inheritance
-import jakarta.persistence.InheritanceType
-import jakarta.persistence.Table
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 /**
- * Base entity for all user accounts in the Zentro system.
+ * Base class for every user account in the Zentro system.
  *
- * Uses JPA joined-table inheritance: the `users` table holds the shared columns
- * (`id`, `fed_uid`, `type`) while [School] and [Teacher] each own a separate table.
+ * Concrete subtypes are [School] and [Teacher], distinguished by the [getType] value.
+ * Jackson uses [getType] as the polymorphic discriminator so the correct subtype is
+ * selected when the JSON is deserialised.
  */
-@Entity
-@Table(name = "users")
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
-abstract class User : PanacheEntity() {
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    property = "type",
+    include = JsonTypeInfo.As.EXISTING_PROPERTY,
+    visible = true,
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = School::class, name = "SCHOOL"),
+    JsonSubTypes.Type(value = Teacher::class, name = "TEACHER"),
+)
+abstract class User {
 
     /** Firebase Authentication UID — unique identifier shared with the auth provider. */
-    @Column(name = "fed_uid", unique = true, nullable = false)
-    lateinit var fedUid: String
+    abstract val fedUid: String
 
-    /** Returns the discriminator value (`"SCHOOL"` or `"TEACHER"`), included in every JSON response. */
+    /**
+     * Returns the discriminator string included in every JSON response.
+     *
+     * @return `"SCHOOL"` for school accounts, `"TEACHER"` for teacher accounts
+     */
     abstract fun getType(): String
-
-    companion object : PanacheCompanion<User> {
-        /** Finds a user by their Firebase Authentication UID, or null if not found. */
-        fun findByFedUid(fedUid: String): User? = find("fedUid", fedUid).firstResult()
-    }
 }

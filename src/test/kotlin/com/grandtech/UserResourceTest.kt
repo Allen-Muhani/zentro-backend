@@ -15,8 +15,8 @@ import org.mockito.Mockito
  * Unit tests for [UserResource] HTTP endpoints.
  *
  * [UserService] is replaced with a Mockito mock so that these tests exercise
- * only the HTTP layer (header extraction, status routing) without touching the
- * database or Firebase.
+ * only the HTTP layer (header extraction, status routing) without touching Neo4j
+ * or Firebase.
  */
 @QuarkusTest
 class UserResourceTest {
@@ -30,11 +30,11 @@ class UserResourceTest {
      */
     @Test
     fun `get current user with valid token returns the user payload`() {
-        val mockUser = Teacher().apply {
-            fedUid = "firebase-uid-123"
-            email = "user@example.com"
-            name = "Test User"
-        }
+        val mockUser = Teacher(
+            fedUid = "firebase-uid-123",
+            email = "user@example.com",
+            name = "Test User",
+        )
         Mockito.`when`(userService.getUserFromToken("Bearer valid-token")).thenReturn(mockUser)
 
         given()

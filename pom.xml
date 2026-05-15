@@ -52,12 +52,9 @@
             <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-orm-panache-kotlin</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-postgresql</artifactId>
+            <groupId>io.quarkiverse.neo4j</groupId>
+            <artifactId>quarkus-neo4j</artifactId>
+            <version>6.6.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.firebase</groupId>
@@ -72,11 +69,6 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit5-mockito</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-h2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -125,7 +117,6 @@
                     <javaParameters>true</javaParameters>
                     <compilerPlugins>
                         <plugin>all-open</plugin>
-                        <plugin>no-arg</plugin>
                     </compilerPlugins>
                     <pluginOptions>
                         <option>all-open:annotation=jakarta.enterprise.context.ApplicationScoped</option>
@@ -133,23 +124,13 @@
                         <option>all-open:annotation=jakarta.enterprise.context.SessionScoped</option>
                         <option>all-open:annotation=jakarta.enterprise.context.Dependent</option>
                         <option>all-open:annotation=jakarta.inject.Singleton</option>
-                        <option>all-open:annotation=jakarta.persistence.Entity</option>
-                        <option>all-open:annotation=jakarta.persistence.MappedSuperclass</option>
                         <option>all-open:annotation=jakarta.ws.rs.Path</option>
-                        <option>no-arg:annotation=jakarta.persistence.Entity</option>
-                        <option>no-arg:annotation=jakarta.persistence.MappedSuperclass</option>
-                        <option>no-arg:annotation=jakarta.persistence.Embeddable</option>
                     </pluginOptions>
                 </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.jetbrains.kotlin</groupId>
                         <artifactId>kotlin-maven-allopen</artifactId>
-                        <version>${kotlin.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-maven-noarg</artifactId>
                         <version>${kotlin.version}</version>
                     </dependency>
                 </dependencies>

@@ -7,13 +7,12 @@ import com.grandtech.model.User
 import com.grandtech.utils.ApiResponse
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
-import jakarta.transaction.Transactional
 
 /**
  * Business logic for user account management.
  *
- * Handles token verification, user lookup, and registration of both
- * school and teacher accounts. Profile updates are handled separately.
+ * Handles Firebase token verification, user lookup, and registration of both
+ * school and teacher accounts. All persistence is delegated to [UserRepository].
  */
 @ApplicationScoped
 class UserService {
@@ -21,6 +20,10 @@ class UserService {
     /** Service used to verify Firebase Authentication ID tokens. */
     @Inject
     lateinit var firebaseAuthService: FirebaseAuthService
+
+    /** Repository that executes Neo4j reads and writes for user nodes. */
+    @Inject
+    lateinit var userRepository: UserRepository
 
     /**
      * Verifies the supplied Firebase ID token and returns the matching user.
@@ -32,7 +35,7 @@ class UserService {
     @Throws(FirebaseAuthException::class)
     fun getUserFromToken(idToken: String): User? {
         val token = firebaseAuthService.verifyToken(idToken)
-        return User.findByFedUid(token.uid)
+        return userRepository.findByFedUid(token.uid)
     }
 
     /**
@@ -43,7 +46,6 @@ class UserService {
      *         502 if the fedUid or email is already taken,
      *         or 500 if the token is invalid or expired
      */
-    @Transactional
     fun registerTeacher(idToken: String): ApiResponse<Teacher> {
         val token = try {
             firebaseAuthService.verifyToken(idToken)
@@ -52,18 +54,14 @@ class UserService {
         }
         val fedUid = token.uid
         val email = token.email
-        if (User.findByFedUid(fedUid) != null
-            || Teacher.findByEmail(email) != null
-            || School.findByEmail(email) != null
+        if (userRepository.existsByFedUid(fedUid) ||
+            userRepository.userExistsByEmail(email) ||
+            userRepository.userExistsByEmail(email)
         ) {
             return ApiResponse(502, "User already in the system!!!", null)
         }
-        val teacher = Teacher().apply {
-            this.fedUid = fedUid
-            this.name = token.name
-            this.email = email
-        }
-        teacher.persist()
+        val teacher = Teacher(fedUid = fedUid, name = token.name, email = email)
+        userRepository.saveTeacher(teacher)
         return ApiResponse(200, "Success", teacher)
     }
 
@@ -75,7 +73,6 @@ class UserService {
      *         502 if the fedUid or email is already taken,
      *         or 500 if the token is invalid or expired
      */
-    @Transactional
     fun registerSchool(idToken: String): ApiResponse<School> {
         val token = try {
             firebaseAuthService.verifyToken(idToken)
@@ -84,14 +81,14 @@ class UserService {
         }
         val fedUid = token.uid
         val email = token.email
-        if (User.findByFedUid(fedUid) != null
-            || Teacher.findByEmail(email) != null
-            || School.findByEmail(email) != null
+        if (userRepository.existsByFedUid(fedUid) ||
+            userRepository.teacherExistsByEmail(email) ||
+            userRepository.schoolExistsByEmail(email)
         ) {
             return ApiResponse(502, "School already in the system", null)
         }
-        val school = School().apply { this.fedUid = fedUid }
-        school.persist()
+        val school = School(fedUid = fedUid)
+        userRepository.saveSchool(school)
         return ApiResponse(200, "Success", school)
     }
 }
