@@ -12,6 +12,7 @@ import org.neo4j.driver.Record
 class RoomService {
 
     @Inject
+    /** Neo4j driver used to open sessions for Cypher queries. */
     lateinit var driver: Driver
 
     /**

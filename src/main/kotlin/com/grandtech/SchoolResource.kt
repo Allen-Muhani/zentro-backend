@@ -21,9 +21,11 @@ import jakarta.ws.rs.core.MediaType
 class SchoolResource {
 
     @Inject
+    /** Provides access to the static CBC JSS subject catalogue. */
     lateinit var subjectRepository: SubjectRepository
 
     @Inject
+    /** Handles Neo4j read and write operations for [com.grandtech.model.School] nodes. */
     lateinit var schoolService: SchoolService
 
     /**
