@@ -10,6 +10,7 @@ import com.grandtech.service.SubjectRepository
 import com.grandtech.utils.ApiResponse
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.PATCH
 import jakarta.ws.rs.POST
@@ -173,6 +174,36 @@ class SchoolResource {
         val updated = schoolService.updateRoom(fedUid, id, room)
         return if (updated != null) {
             ApiResponse(200, "Room updated", updated)
+        } else {
+            ApiResponse(404, "Room not found", null)
+        }
+    }
+
+    /**
+     * Deletes a room owned by the authenticated school.
+     *
+     * The room is only deleted when it is linked to this school via a `HAS_ROOM`
+     * relationship, preventing one school from deleting another school's rooms.
+     *
+     * @param requestContext the JAX-RS request context carrying the `fedUid` set by [com.grandtech.auth.AuthFilter]
+     * @param id             the UUID of the room to delete
+     * @return an [ApiResponse] with 200 on success, 403 if the token is not a school,
+     *         or 404 if no matching room was found under this school
+     */
+    @DELETE
+    @Path("/rooms/{id}")
+    @Authenticated
+    @Produces(MediaType.APPLICATION_JSON)
+    fun deleteRoom(
+        @Context requestContext: ContainerRequestContext,
+        @PathParam("id") id: String,
+    ): ApiResponse<Nothing> {
+        val fedUid = requestContext.getProperty("fedUid") as String
+        schoolService.getSchoolByFedUid(fedUid)
+            ?: return ApiResponse(403, "Forbidden: account is not a school", null)
+        val deleted = schoolService.deleteRoom(fedUid, id)
+        return if (deleted) {
+            ApiResponse(200, "Room deleted", null)
         } else {
             ApiResponse(404, "Room not found", null)
         }

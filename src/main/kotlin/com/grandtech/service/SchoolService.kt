@@ -191,6 +191,30 @@ class SchoolService {
             if (result.hasNext()) mapToRoom(result.next()) else null
         }
 
+    /**
+     * Deletes the [Room] node with [roomId] only if it is linked to the school
+     * identified by [schoolFedUid] via a `HAS_ROOM` relationship.
+     *
+     * Uses `DETACH DELETE` so all relationships on the room node are removed
+     * together with the node itself. Returns false if no matching room was found,
+     * meaning the room either does not exist or belongs to a different school.
+     *
+     * @param schoolFedUid the Firebase UID of the owning school
+     * @param roomId       the UUID of the room to delete
+     * @return true if the room was deleted, false if it was not found under this school
+     */
+    fun deleteRoom(schoolFedUid: String, roomId: String): Boolean =
+        driver.session().use { session ->
+            val result = session.run(
+                """
+                MATCH (s:School {fedUid: ${'$'}fedUid})-[:HAS_ROOM]->(r:Room {id: ${'$'}roomId})
+                DETACH DELETE r
+                """.trimIndent(),
+                mapOf("fedUid" to schoolFedUid, "roomId" to roomId),
+            )
+            result.consume().counters().nodesDeleted() > 0
+        }
+
     private fun mapToRoom(record: Record) = Room(
         id                  = record["id"].takeUnless { it.isNull }?.asString(),
         name                = record["name"].takeUnless { it.isNull }?.asString(),
