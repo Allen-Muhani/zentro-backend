@@ -6,6 +6,7 @@ import com.grandtech.model.School
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import org.neo4j.driver.Driver
+import org.neo4j.driver.Record
 
 /**
  * Executes Neo4j read and write operations specific to [School] nodes.
@@ -131,16 +132,71 @@ class SchoolService {
                     "isStandardClassroom" to room.isStandardClassroom,
                 ),
             )
-            if (result.hasNext()) {
-                val record = result.next()
-                Room(
-                    id                  = record["id"].asString(),
-                    name                = record["name"].asString(),
-                    capacity            = record["capacity"].asInt(),
-                    capabilityTag       = record["capabilityTag"].takeUnless { it.isNull }
-                                            ?.asString()?.let { RoomCapabilityTag.valueOf(it) },
-                    isStandardClassroom = record["isStandardClassroom"].asBoolean(),
-                )
-            } else null
+            if (result.hasNext()) mapToRoom(result.next()) else null
         }
+
+    /**
+     * Returns all [Room] nodes belonging to the school identified by [schoolFedUid],
+     * ordered by name. Returns an empty list when the school has no rooms.
+     *
+     * @param schoolFedUid the Firebase UID of the school whose rooms to fetch
+     * @return list of rooms owned by the school
+     */
+    fun listRooms(schoolFedUid: String): List<Room> =
+        driver.session().use { session ->
+            session.run(
+                """
+                MATCH (s:School {fedUid: ${'$'}fedUid})-[:HAS_ROOM]->(r:Room)
+                RETURN r.id AS id, r.name AS name, r.capacity AS capacity,
+                       r.capabilityTag AS capabilityTag, r.isStandardClassroom AS isStandardClassroom
+                ORDER BY r.name
+                """.trimIndent(),
+                mapOf("fedUid" to schoolFedUid),
+            ).list { mapToRoom(it) }
+        }
+
+    /**
+     * Updates the mutable fields of a [Room] node owned by the given school.
+     *
+     * [Room.id] is the immutable identifier and is never changed. Each field uses
+     * COALESCE so a null value in [room] leaves the stored value unchanged.
+     * Returns null if no room with [roomId] belongs to the school.
+     *
+     * @param schoolFedUid the Firebase UID of the owning school
+     * @param roomId       the UUID of the room to update
+     * @param room         the new field values (null fields are ignored)
+     * @return the updated [Room] as persisted, or null if the room was not found
+     */
+    fun updateRoom(schoolFedUid: String, roomId: String, room: Room): Room? =
+        driver.session().use { session ->
+            val result = session.run(
+                """
+                MATCH (s:School {fedUid: ${'$'}fedUid})-[:HAS_ROOM]->(r:Room {id: ${'$'}roomId})
+                SET r.name               = COALESCE(${'$'}name, r.name),
+                    r.capacity           = COALESCE(${'$'}capacity, r.capacity),
+                    r.capabilityTag      = COALESCE(${'$'}capabilityTag, r.capabilityTag),
+                    r.isStandardClassroom = COALESCE(${'$'}isStandardClassroom, r.isStandardClassroom)
+                RETURN r.id AS id, r.name AS name, r.capacity AS capacity,
+                       r.capabilityTag AS capabilityTag, r.isStandardClassroom AS isStandardClassroom
+                """.trimIndent(),
+                mapOf(
+                    "fedUid"              to schoolFedUid,
+                    "roomId"              to roomId,
+                    "name"                to room.name,
+                    "capacity"            to room.capacity,
+                    "capabilityTag"       to room.capabilityTag?.name,
+                    "isStandardClassroom" to room.isStandardClassroom,
+                ),
+            )
+            if (result.hasNext()) mapToRoom(result.next()) else null
+        }
+
+    private fun mapToRoom(record: Record) = Room(
+        id                  = record["id"].takeUnless { it.isNull }?.asString(),
+        name                = record["name"].takeUnless { it.isNull }?.asString(),
+        capacity            = record["capacity"].takeUnless { it.isNull }?.asInt(),
+        capabilityTag       = record["capabilityTag"].takeUnless { it.isNull }
+                                ?.asString()?.let { RoomCapabilityTag.valueOf(it) },
+        isStandardClassroom = record["isStandardClassroom"].takeUnless { it.isNull }?.asBoolean(),
+    )
 }

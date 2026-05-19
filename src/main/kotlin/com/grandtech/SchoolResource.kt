@@ -14,6 +14,7 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.PATCH
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.core.Context
@@ -123,6 +124,57 @@ class SchoolResource {
             ApiResponse(200, "Room created", created)
         } else {
             ApiResponse(404, "School not found", null)
+        }
+    }
+
+    /**
+     * Lists all rooms belonging to the authenticated school, ordered by name.
+     *
+     * @param requestContext the JAX-RS request context carrying the `fedUid` set by [com.grandtech.auth.AuthFilter]
+     * @return an [ApiResponse] whose payload is the list of [Room] objects, or 403 if the
+     *         token does not belong to a school account
+     */
+    @GET
+    @Path("/rooms")
+    @Authenticated
+    @Produces(MediaType.APPLICATION_JSON)
+    fun listRooms(@Context requestContext: ContainerRequestContext): ApiResponse<List<Room>> {
+        val fedUid = requestContext.getProperty("fedUid") as String
+        schoolService.getSchoolByFedUid(fedUid)
+            ?: return ApiResponse(403, "Forbidden: account is not a school", null)
+        return ApiResponse(200, "Success", schoolService.listRooms(fedUid))
+    }
+
+    /**
+     * Updates the mutable fields of a room owned by the authenticated school.
+     *
+     * [Room.id] is immutable and is taken from the path, not the request body.
+     * Omitting a field (null) leaves the existing stored value unchanged.
+     *
+     * @param requestContext the JAX-RS request context carrying the `fedUid` set by [com.grandtech.auth.AuthFilter]
+     * @param id             the UUID of the room to update
+     * @param room           the new field values
+     * @return an [ApiResponse] carrying the updated [Room] on success, 403 if the token does
+     *         not belong to a school, or 404 if no room with the given id exists in this school
+     */
+    @PATCH
+    @Path("/rooms/{id}")
+    @Authenticated
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    fun updateRoom(
+        @Context requestContext: ContainerRequestContext,
+        @PathParam("id") id: String,
+        room: Room,
+    ): ApiResponse<Room> {
+        val fedUid = requestContext.getProperty("fedUid") as String
+        schoolService.getSchoolByFedUid(fedUid)
+            ?: return ApiResponse(403, "Forbidden: account is not a school", null)
+        val updated = schoolService.updateRoom(fedUid, id, room)
+        return if (updated != null) {
+            ApiResponse(200, "Room updated", updated)
+        } else {
+            ApiResponse(404, "Room not found", null)
         }
     }
 
