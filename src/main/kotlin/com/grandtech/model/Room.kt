@@ -15,15 +15,15 @@ data class Room(
     val id: String? = null,
 
     /** Human-readable name, e.g. "Science Lab 1". */
-    val name: String,
+    val name: String? = null,
 
     /** Maximum student capacity. */
-    val capacity: Int,
+    val capacity: Int? = null,
 
     /** Specialist facility type. Null for standard classrooms. */
     val capabilityTag: RoomCapabilityTag? = null,
 
     /** True when this room is a general-purpose classroom. */
     @get:JsonProperty("isStandardClassroom")
-    val isStandardClassroom: Boolean = true,
+    val isStandardClassroom: Boolean? = null,
 )
