@@ -1,6 +1,6 @@
 package com.grandtech
 
-import com.grandtech.dto.SubjectGroupResponse
+import com.grandtech.model.Subject
 import com.grandtech.service.SubjectRepository
 import com.grandtech.utils.ApiResponse
 import jakarta.inject.Inject
@@ -27,17 +27,16 @@ class SchoolResource {
     fun getSchools(): ApiResponse<String> = ApiResponse(200, "success", "Schools endpoint is live")
 
     /**
-     * Lists all CBC JSS learning areas grouped by curriculum type (CORE and OPTIONAL).
+     * Lists all CBC JSS subjects.
      *
      * Data is seeded at startup and reflects the subjects defined by the Kenya
      * Institute of Curriculum Development (KICD) for Grades 7–9.
      *
-     * @return an [ApiResponse] whose payload is a list of [SubjectGroupResponse] objects,
-     *         each containing the type name, description, and its member subjects
+     * @return an [ApiResponse] whose payload is a list of [Subject] objects.
      */
     @GET
     @Path("/subjects")
     @Produces(MediaType.APPLICATION_JSON)
-    fun listSubjects(): ApiResponse<List<SubjectGroupResponse>> =
-        ApiResponse(200, "success", subjectRepository.listGroupedByType())
+    fun listSubjects(): ApiResponse<List<Subject>> =
+        ApiResponse(200, "Success", subjectRepository.listAll())
 }
