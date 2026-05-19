@@ -7,7 +7,7 @@ import org.hamcrest.CoreMatchers.hasItems
 import org.junit.jupiter.api.Test
 
 /**
- * Tests for `GET /schools/rooms/capability-tags`.
+ * Tests for `GET /school/rooms/capability-tags`.
  */
 @QuarkusTest
 class ListRoomCapabilityTagsTest {
@@ -15,7 +15,7 @@ class ListRoomCapabilityTagsTest {
     @Test
     fun `returns 200 with all capability tags`() {
         given()
-            .`when`().get("/schools/rooms/capability-tags")
+            .`when`().get("/school/rooms/capability-tags")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(200))
@@ -26,7 +26,7 @@ class ListRoomCapabilityTagsTest {
     @Test
     fun `does not require authentication`() {
         given()
-            .`when`().get("/schools/rooms/capability-tags")
+            .`when`().get("/school/rooms/capability-tags")
             .then()
                 .statusCode(200)
     }

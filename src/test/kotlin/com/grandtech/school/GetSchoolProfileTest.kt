@@ -15,7 +15,7 @@ import org.mockito.Mockito
 import java.lang.reflect.Constructor
 
 /**
- * Tests for `GET /schools/profile`.
+ * Tests for `GET /school/profile`.
  */
 @QuarkusTest
 open class GetSchoolProfileTest {
@@ -54,7 +54,7 @@ open class GetSchoolProfileTest {
 
         given()
             .header("Authorization", "Bearer valid-token")
-            .`when`().get("/schools/profile")
+            .`when`().get("/school/profile")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(200))
@@ -79,7 +79,7 @@ open class GetSchoolProfileTest {
 
         given()
             .header("Authorization", "Bearer valid-token-2")
-            .`when`().get("/schools/profile")
+            .`when`().get("/school/profile")
             .then()
                 .statusCode(200)
                 .body("payload.fedUid",      `is`("uid-school-2"))
@@ -93,7 +93,7 @@ open class GetSchoolProfileTest {
     @Test
     fun `without auth header returns 401`() {
         given()
-            .`when`().get("/schools/profile")
+            .`when`().get("/school/profile")
             .then()
                 .statusCode(401)
                 .body("status",  `is`(401))
@@ -109,7 +109,7 @@ open class GetSchoolProfileTest {
 
         given()
             .header("Authorization", "Bearer teacher-token")
-            .`when`().get("/schools/profile")
+            .`when`().get("/school/profile")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(403))
