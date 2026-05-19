@@ -79,20 +79,7 @@ class SchoolResource {
         }
     }
 
-    /**
-     * Updates the mutable fields of the authenticated school's profile.
-     *
-     * Accepts a [School] object but only applies [School.name], [School.phoneNumber],
-     * [School.county], and [School.subCounty]. Identity fields ([School.fedUid] and
-     * [School.email]) in the request body are ignored — the stored values are never
-     * overwritten. Omitting a field (null) leaves the existing stored value unchanged.
-     *
-     * @param requestContext the JAX-RS request context carrying the `fedUid` property
-     *                       set by [com.grandtech.auth.AuthFilter]
-     * @param school         the [School] object containing the fields to update
-     * @return an [ApiResponse] carrying the updated [School] on success, or 404 if
-     *         no school node is found for the authenticated UID
-     */
+
     /**
      * Creates a new room and associates it with the authenticated school.
      *
@@ -124,6 +111,20 @@ class SchoolResource {
         }
     }
 
+    /**
+     * Updates the mutable fields of the authenticated school's profile.
+     *
+     * Accepts a [School] object but only applies [School.name], [School.phoneNumber],
+     * [School.county], and [School.subCounty]. Identity fields ([School.fedUid] and
+     * [School.email]) in the request body are ignored — the stored values are never
+     * overwritten. Omitting a field (null) leaves the existing stored value unchanged.
+     *
+     * @param requestContext the JAX-RS request context carrying the `fedUid` property
+     *                       set by [com.grandtech.auth.AuthFilter]
+     * @param school         the [School] object containing the fields to update
+     * @return an [ApiResponse] carrying the updated [School] on success, or 404 if
+     *         no school node is found for the authenticated UID
+     */
     @PATCH
     @Path("/profile")
     @Authenticated
