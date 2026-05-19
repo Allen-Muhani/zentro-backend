@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuthException
 import com.grandtech.model.School
 import com.grandtech.model.Teacher
 import com.grandtech.utils.ApiResponse
+import io.quarkus.test.junit.QuarkusTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -13,6 +14,7 @@ import org.mockito.Mockito
 /**
  * Tests for [com.grandtech.service.UserService.registerTeacher].
  */
+@QuarkusTest
 class RegisterTeacherTest : UserServiceTestBase() {
 
     @Test
