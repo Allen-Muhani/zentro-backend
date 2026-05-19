@@ -14,6 +14,7 @@ import org.neo4j.driver.Driver
 class SchoolService {
 
     @Inject
+    /** Neo4j driver used to open sessions for Cypher queries. */
     lateinit var driver: Driver
 
     /**

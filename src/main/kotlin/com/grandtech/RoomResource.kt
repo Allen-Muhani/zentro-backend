@@ -24,9 +24,11 @@ import jakarta.ws.rs.core.MediaType
 class RoomResource {
 
     @Inject
+    /** Verifies that the authenticated user owns a school before room operations. */
     lateinit var schoolService: SchoolService
 
     @Inject
+    /** Handles Neo4j read and write operations for [com.grandtech.model.Room] nodes. */
     lateinit var roomService: RoomService
 
     /**
