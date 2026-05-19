@@ -1,15 +1,45 @@
 package com.grandtech.model
 
 /**
- * Classifies CBC learning areas into curriculum groups (e.g. CORE, OPTIONAL).
+ * Broad categorisation of the 10 CBC JSS learning areas.
  *
- * Stored in Neo4j as `(:SubjectType)` nodes.
- * Subjects link to their type via an `[:OF_TYPE]` relationship.
+ * Used by the solver to apply category-specific soft constraints:
  *
- * @property name        unique identifier for this group, e.g. `"CORE"` or `"OPTIONAL"`
- * @property description human-readable explanation of what this classification means
+ *  * LANGUAGE    – language-specialist teacher; prefer morning.
+ *  * MATHEMATICS – maths teacher; prefer morning slots.
+ *  * SCIENCE     – double period required; lab room required.
+ *  * TECHNICAL   – double period required; workshop required.
+ *  * SOCIAL      – standard classroom; spread across week.
+ *  * RELIGIOUS   – standard classroom; CRE/IRE/HRE strand.
+ *  * AGRICULTURE – double period required; farm/garden room.
+ *  * ARTS_SPORTS – physical component must be before break.
+ *  * PASTORAL    – fixed Monday PPI slot; form teacher.
  */
-data class SubjectType(
-    val name: String,
-    val description: String? = null,
-)
+enum class SubjectType {
+    /** Language subjects (English, Kiswahili). */
+    LANGUAGE,
+
+    /** Mathematics. */
+    MATHEMATICS,
+
+    /** Integrated Science — lab practicals required. */
+    SCIENCE,
+
+    /** Pre-Technical Studies — workshop practicals required. */
+    TECHNICAL,
+
+    /** Social Studies. */
+    SOCIAL,
+
+    /** Religious Education (CRE / IRE / HRE). */
+    RELIGIOUS,
+
+    /** Agriculture and Nutrition — farm practicals required. */
+    AGRICULTURE,
+
+    /** Creative Arts and Sports — PE before break. */
+    ARTS_SPORTS,
+
+    /** Pastoral Programme of Instruction — fixed Monday slot. */
+    PASTORAL,
+}
