@@ -16,6 +16,7 @@
         <quarkus.platform.version>3.35.3</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
+        <detekt.version>1.23.7</detekt.version>
     </properties>
 
     <dependencyManagement>
@@ -156,6 +157,24 @@
                 <executions>
                     <execution>
                         <id>check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.ozsie</groupId>
+                <artifactId>detekt-maven-plugin</artifactId>
+                <version>${detekt.version}</version>
+                <configuration>
+                    <config>detekt.yml</config>
+                    <excludes>**/test/**</excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>detekt-check</id>
+                        <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>

@@ -1,0 +1,49 @@
+build:
+  maxIssues: 0
+
+# Only the comments ruleset is active. All other rulesets are disabled so Detekt
+# acts purely as a documentation-completeness gate and does not duplicate ktlint.
+comments:
+  active: true
+  AbsentOrWrongFileLicense:
+    active: false
+  CommentOverPrivateFunction:
+    active: false
+  CommentOverPrivateProperty:
+    active: false
+  DeprecatedBlockTag:
+    active: false
+  EndOfSentenceFormat:
+    active: false
+  KDocReferencesNonPublicProperty:
+    active: false
+  OutdatedDocumentation:
+    active: false
+  UndocumentedPublicClass:
+    active: true
+    searchInNestedClass: true
+    searchInInnerClass: true
+    searchInInnerObject: false
+    searchInInnerInterface: true
+    searchInProtectedClass: false
+  UndocumentedPublicFunction:
+    active: true
+  UndocumentedPublicProperty:
+    active: true
+
+complexity:
+  active: false
+coroutines:
+  active: false
+empty-blocks:
+  active: false
+exceptions:
+  active: false
+naming:
+  active: false
+performance:
+  active: false
+potential-bugs:
+  active: false
+style:
+  active: false
