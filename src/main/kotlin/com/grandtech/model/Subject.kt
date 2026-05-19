@@ -1,5 +1,7 @@
 package com.grandtech.model
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 /**
  * Represents a CBC JSS learning area / subject.
  *
@@ -72,6 +74,7 @@ data class Subject(
      * True only for PPI — it is fixed to Monday Period 0 and
      * taught by the class form teacher, so the solver skips it.
      */
+    @get:JsonProperty("isPpiFixed")
     val isPpiFixed: Boolean = false,
 
     /**
