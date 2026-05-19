@@ -2,6 +2,7 @@ package com.grandtech
 
 import com.grandtech.auth.Authenticated
 import com.grandtech.model.Room
+import com.grandtech.model.RoomCapabilityTag
 import com.grandtech.model.School
 import com.grandtech.model.Subject
 import com.grandtech.service.SchoolService
@@ -79,6 +80,20 @@ class SchoolResource {
         }
     }
 
+
+    /**
+     * Lists all room capability tags supported by the system.
+     *
+     * Intended for front-end dropdowns when creating specialist rooms. The values
+     * correspond to [RoomCapabilityTag] enum entries and are returned as strings.
+     *
+     * @return an [ApiResponse] whose payload is the list of capability tag names
+     */
+    @GET
+    @Path("/rooms/capability-tags")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun listRoomCapabilityTags(): ApiResponse<List<String>> =
+        ApiResponse(200, "Success", RoomCapabilityTag.entries.map { it.name })
 
     /**
      * Creates a new room and associates it with the authenticated school.
