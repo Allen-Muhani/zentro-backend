@@ -7,7 +7,9 @@ import com.grandtech.service.SchoolService
 import com.grandtech.service.SubjectRepository
 import com.grandtech.utils.ApiResponse
 import jakarta.inject.Inject
+import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
+import jakarta.ws.rs.PATCH
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.container.ContainerRequestContext
@@ -72,6 +74,38 @@ class SchoolResource {
             ApiResponse(200, "Success", school)
         } else {
             ApiResponse(403, "Forbidden: account is not a school", null)
+        }
+    }
+
+    /**
+     * Updates the mutable fields of the authenticated school's profile.
+     *
+     * Accepts a [School] object but only applies [School.name], [School.phoneNumber],
+     * [School.county], and [School.subCounty]. Identity fields ([School.fedUid] and
+     * [School.email]) in the request body are ignored — the stored values are never
+     * overwritten. Omitting a field (null) leaves the existing stored value unchanged.
+     *
+     * @param requestContext the JAX-RS request context carrying the `fedUid` property
+     *                       set by [com.grandtech.auth.AuthFilter]
+     * @param school         the [School] object containing the fields to update
+     * @return an [ApiResponse] carrying the updated [School] on success, or 404 if
+     *         no school node is found for the authenticated UID
+     */
+    @PATCH
+    @Path("/profile")
+    @Authenticated
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    fun updateSchoolDetails(
+        @Context requestContext: ContainerRequestContext,
+        school: School,
+    ): ApiResponse<School> {
+        val fedUid = requestContext.getProperty("fedUid") as String
+        val updated = schoolService.updateSchool(fedUid, school)
+        return if (updated != null) {
+            ApiResponse(200, "Success", updated)
+        } else {
+            ApiResponse(404, "School not found", null)
         }
     }
 }

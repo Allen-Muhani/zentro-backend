@@ -6,10 +6,9 @@ import jakarta.inject.Inject
 import org.neo4j.driver.Driver
 
 /**
- * Executes Neo4j read operations specific to [School] nodes.
+ * Executes Neo4j read and write operations specific to [School] nodes.
  *
- * Queries target the `School` label directly rather than going through the
- * generic [UserRepository], so only school properties are fetched and mapped.
+ * Immutable identity fields (`fedUid`, `email`) are never overwritten by updates.
  */
 @ApplicationScoped
 class SchoolService {
@@ -45,6 +44,52 @@ class SchoolService {
                     phoneNumber = record["phoneNumber"].takeUnless { it.isNull }?.asString(),
                     county = record["county"].takeUnless { it.isNull }?.asString(),
                     subCounty = record["subCounty"].takeUnless { it.isNull }?.asString(),
+                )
+            } else null
+        }
+
+    /**
+     * Updates the mutable fields of a [School] node identified by [fedUid].
+     *
+     * Only [School.name], [School.phoneNumber], [School.county], and
+     * [School.subCounty] are written. [School.fedUid] and [School.email]
+     * are identity fields and are never modified. Each field uses COALESCE
+     * so a null value in [school] leaves the stored value unchanged.
+     *
+     * @param fedUid the Firebase UID identifying the school node to update
+     * @param school the [School] object carrying the new field values
+     * @return the updated [School] as persisted in the graph, or null if no
+     *         school node exists for the given [fedUid]
+     */
+    fun updateSchool(fedUid: String, school: School): School? =
+        driver.session().use { session ->
+            val result = session.run(
+                """
+                MATCH (s:School {fedUid: ${'$'}fedUid})
+                SET s.name        = COALESCE(${'$'}name, s.name),
+                    s.phoneNumber = COALESCE(${'$'}phoneNumber, s.phoneNumber),
+                    s.county      = COALESCE(${'$'}county, s.county),
+                    s.subCounty   = COALESCE(${'$'}subCounty, s.subCounty)
+                RETURN s.fedUid AS fedUid, s.name AS name, s.email AS email,
+                       s.phoneNumber AS phoneNumber, s.county AS county, s.subCounty AS subCounty
+                """.trimIndent(),
+                mapOf(
+                    "fedUid"      to fedUid,
+                    "name"        to school.name,
+                    "phoneNumber" to school.phoneNumber,
+                    "county"      to school.county,
+                    "subCounty"   to school.subCounty,
+                ),
+            )
+            if (result.hasNext()) {
+                val record = result.next()
+                School(
+                    fedUid      = record["fedUid"].asString(),
+                    name        = record["name"].takeUnless { it.isNull }?.asString(),
+                    email       = record["email"].takeUnless { it.isNull }?.asString(),
+                    phoneNumber = record["phoneNumber"].takeUnless { it.isNull }?.asString(),
+                    county      = record["county"].takeUnless { it.isNull }?.asString(),
+                    subCounty   = record["subCounty"].takeUnless { it.isNull }?.asString(),
                 )
             } else null
         }
