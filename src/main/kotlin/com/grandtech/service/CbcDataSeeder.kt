@@ -21,19 +21,34 @@ import jakarta.inject.Inject
 @ApplicationScoped
 class CbcDataSeeder {
 
+    /** Repository used to persist each [Subject] node during seeding. */
     @Inject
     lateinit var subjectRepository: SubjectRepository
 
+    /**
+     * Entry point called by the CDI container once the application is ready.
+     *
+     * Skips seeding when subjects already exist so repeated restarts are safe.
+     *
+     * @param event the Quarkus startup event injected by CDI
+     */
     fun onStart(@Observes event: StartupEvent) {
         if (subjectRepository.countAll() > 0L) return
         seed()
     }
 
+    /**
+     * Persists every entry in [SUBJECTS] to the graph.
+     *
+     * Delegates each write to [SubjectRepository.saveSubject], which uses MERGE
+     * so the operation is idempotent.
+     */
     private fun seed() {
         SUBJECTS.forEach(subjectRepository::saveSubject)
     }
 
     companion object {
+        /** Canonical list of all 10 rationalized CBC JSS learning areas to seed into the graph. */
         val SUBJECTS = listOf(
             Subject(
                 id = "ENG",

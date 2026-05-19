@@ -22,17 +22,31 @@ import org.neo4j.driver.Driver
 @ApplicationScoped
 class SubjectRepository {
 
+    /** Neo4j driver injected by Quarkus CDI; manages connection pooling and sessions. */
     @Inject
     lateinit var driver: Driver
 
-    /** Returns the total number of Subject nodes; used by [CbcDataSeeder] to gate seeding. */
+   /**
+     * Returns the total number of `Subject` nodes in the graph.
+     *
+     * Used by [CbcDataSeeder] to decide whether the seed should be skipped.
+     *
+     * @return count of all Subject nodes
+     */
     fun countAll(): Long =
         driver.session().use { session ->
             session.run("MATCH (s:Subject) RETURN count(s) AS count")
                 .single()["count"].asLong()
         }
 
-    /** Creates or updates a Subject node. Safe to call multiple times on the same subject. */
+    /**
+     * Creates or updates a `Subject` node using MERGE so the operation is idempotent.
+     *
+     * All solver fields are overwritten on every call, so passing an updated
+     * [Subject] is safe even if the node already exists.
+     *
+     * @param subject the [Subject] whose properties to write
+     */
     fun saveSubject(subject: Subject) {
         driver.session().use { session ->
             session.run(
@@ -66,13 +80,22 @@ class SubjectRepository {
         }
     }
 
-    /** Returns all subjects ordered by name, unfiltered. */
+    /**
+     * Returns all `Subject` nodes from the graph, ordered alphabetically by name.
+     *
+     * @return list of every [Subject], sorted by name
+     */
     fun listAll(): List<Subject> =
         driver.session().use { session ->
             session.run("MATCH (s:Subject) RETURN s ORDER BY s.name")
                 .list { record -> record["s"].asNode().toSubject() }
         }
 
+    /**
+     * Maps a raw Neo4j node to a [Subject] instance by reading its stored properties.
+     *
+     * @return the [Subject] populated from this node's property map
+     */
     private fun org.neo4j.driver.types.Node.toSubject() = Subject(
         id                    = this["id"].asString(),
         symbol                = this["symbol"].asString(),
