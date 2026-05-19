@@ -14,4 +14,10 @@ enum class RoomCapabilityTag {
 
     /** School farm or garden plot. Used by Agriculture & Nutrition. */
     GARDEN,
+
+    /** Computer / ICT lab. Used by Digital Literacy. */
+    COMPUTER_LAB,
+
+    /** Games field or gymnasium. Used by Creative Arts & Sports PE. */
+    GAMES_FIELD,
 }
