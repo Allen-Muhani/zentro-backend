@@ -4,6 +4,7 @@ import com.grandtech.model.Room
 import com.grandtech.model.RoomCapabilityTag
 import com.grandtech.model.School
 import com.grandtech.service.FirebaseAuthService
+import com.grandtech.service.RoomService
 import com.grandtech.service.SchoolService
 import com.grandtech.service.UserRepository
 import io.quarkus.test.InjectMock
@@ -15,7 +16,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 
 /**
- * Tests for `GET /schools/rooms`.
+ * Tests for `GET /school/rooms`.
  */
 @QuarkusTest
 open class ListRoomsTest {
@@ -29,6 +30,9 @@ open class ListRoomsTest {
     @InjectMock
     lateinit var schoolService: SchoolService
 
+    @InjectMock
+    lateinit var roomService: RoomService
+
     @Test
     fun `returns 200 with list of rooms`() {
         val token = GetSchoolProfileTest.buildToken("uid-school-list-1")
@@ -36,7 +40,7 @@ open class ListRoomsTest {
         Mockito.`when`(userRepository.existsByFedUid("uid-school-list-1")).thenReturn(true)
         Mockito.`when`(schoolService.getSchoolByFedUid("uid-school-list-1"))
             .thenReturn(School(fedUid = "uid-school-list-1"))
-        Mockito.`when`(schoolService.listRooms("uid-school-list-1")).thenReturn(
+        Mockito.`when`(roomService.listRooms("uid-school-list-1")).thenReturn(
             listOf(
                 Room(id = "uuid-1", name = "Classroom 7A", capacity = 45, isStandardClassroom = true),
                 Room(id = "uuid-2", name = "Science Lab 1", capacity = 40, capabilityTag = RoomCapabilityTag.SCIENCE_LAB, isStandardClassroom = false),
@@ -45,7 +49,7 @@ open class ListRoomsTest {
 
         given()
             .header("Authorization", "Bearer list-token-1")
-            .`when`().get("/schools/rooms")
+            .`when`().get("/school/rooms")
             .then()
                 .statusCode(200)
                 .body("status",                         `is`(200))
@@ -66,11 +70,11 @@ open class ListRoomsTest {
         Mockito.`when`(userRepository.existsByFedUid("uid-school-list-2")).thenReturn(true)
         Mockito.`when`(schoolService.getSchoolByFedUid("uid-school-list-2"))
             .thenReturn(School(fedUid = "uid-school-list-2"))
-        Mockito.`when`(schoolService.listRooms("uid-school-list-2")).thenReturn(emptyList())
+        Mockito.`when`(roomService.listRooms("uid-school-list-2")).thenReturn(emptyList())
 
         given()
             .header("Authorization", "Bearer list-token-2")
-            .`when`().get("/schools/rooms")
+            .`when`().get("/school/rooms")
             .then()
                 .statusCode(200)
                 .body("status",         `is`(200))
@@ -80,7 +84,7 @@ open class ListRoomsTest {
     @Test
     fun `without auth header returns 401`() {
         given()
-            .`when`().get("/schools/rooms")
+            .`when`().get("/school/rooms")
             .then()
                 .statusCode(401)
                 .body("status",  `is`(401))
@@ -96,7 +100,7 @@ open class ListRoomsTest {
 
         given()
             .header("Authorization", "Bearer teacher-list-token")
-            .`when`().get("/schools/rooms")
+            .`when`().get("/school/rooms")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(403))

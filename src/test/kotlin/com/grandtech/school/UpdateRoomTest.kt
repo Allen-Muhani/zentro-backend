@@ -4,6 +4,7 @@ import com.grandtech.model.Room
 import com.grandtech.model.RoomCapabilityTag
 import com.grandtech.model.School
 import com.grandtech.service.FirebaseAuthService
+import com.grandtech.service.RoomService
 import com.grandtech.service.SchoolService
 import com.grandtech.service.UserRepository
 import io.quarkus.test.InjectMock
@@ -16,7 +17,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 
 /**
- * Tests for `PATCH /schools/rooms/{id}`.
+ * Tests for `PATCH /school/rooms/{id}`.
  */
 @QuarkusTest
 open class UpdateRoomTest {
@@ -29,6 +30,9 @@ open class UpdateRoomTest {
 
     @InjectMock
     lateinit var schoolService: SchoolService
+
+    @InjectMock
+    lateinit var roomService: RoomService
 
     private fun anyRoom(): Room { Mockito.any(Room::class.java); return uninitialized() }
     private fun eqStr(v: String): String { Mockito.eq(v); return v }
@@ -43,14 +47,14 @@ open class UpdateRoomTest {
         Mockito.`when`(userRepository.existsByFedUid("uid-school-upd-room-1")).thenReturn(true)
         Mockito.`when`(schoolService.getSchoolByFedUid("uid-school-upd-room-1"))
             .thenReturn(School(fedUid = "uid-school-upd-room-1"))
-        Mockito.`when`(schoolService.updateRoom(eqStr("uid-school-upd-room-1"), eqStr("room-uuid-1"), anyRoom()))
+        Mockito.`when`(roomService.updateRoom(eqStr("uid-school-upd-room-1"), eqStr("room-uuid-1"), anyRoom()))
             .thenReturn(Room(id = "room-uuid-1", name = "Renamed Lab", capacity = 35, isStandardClassroom = true))
 
         given()
             .header("Authorization", "Bearer upd-room-token-1")
             .contentType(ContentType.JSON)
             .body("""{"name":"Renamed Lab","capacity":35}""")
-            .`when`().patch("/schools/rooms/room-uuid-1")
+            .`when`().patch("/school/rooms/room-uuid-1")
             .then()
                 .statusCode(200)
                 .body("status",           `is`(200))
@@ -67,7 +71,7 @@ open class UpdateRoomTest {
         Mockito.`when`(userRepository.existsByFedUid("uid-school-upd-room-2")).thenReturn(true)
         Mockito.`when`(schoolService.getSchoolByFedUid("uid-school-upd-room-2"))
             .thenReturn(School(fedUid = "uid-school-upd-room-2"))
-        Mockito.`when`(schoolService.updateRoom(eqStr("uid-school-upd-room-2"), eqStr("room-uuid-2"), anyRoom()))
+        Mockito.`when`(roomService.updateRoom(eqStr("uid-school-upd-room-2"), eqStr("room-uuid-2"), anyRoom()))
             .thenReturn(
                 Room(
                     id                  = "room-uuid-2",
@@ -82,7 +86,7 @@ open class UpdateRoomTest {
             .header("Authorization", "Bearer upd-room-token-2")
             .contentType(ContentType.JSON)
             .body("""{"capacity":50}""")
-            .`when`().patch("/schools/rooms/room-uuid-2")
+            .`when`().patch("/school/rooms/room-uuid-2")
             .then()
                 .statusCode(200)
                 .body("status",                     `is`(200))
@@ -99,14 +103,14 @@ open class UpdateRoomTest {
         Mockito.`when`(userRepository.existsByFedUid("uid-school-upd-room-3")).thenReturn(true)
         Mockito.`when`(schoolService.getSchoolByFedUid("uid-school-upd-room-3"))
             .thenReturn(School(fedUid = "uid-school-upd-room-3"))
-        Mockito.`when`(schoolService.updateRoom(eqStr("uid-school-upd-room-3"), eqStr("nonexistent-id"), anyRoom()))
+        Mockito.`when`(roomService.updateRoom(eqStr("uid-school-upd-room-3"), eqStr("nonexistent-id"), anyRoom()))
             .thenReturn(null)
 
         given()
             .header("Authorization", "Bearer upd-room-token-3")
             .contentType(ContentType.JSON)
             .body("""{"name":"Ghost Room"}""")
-            .`when`().patch("/schools/rooms/nonexistent-id")
+            .`when`().patch("/school/rooms/nonexistent-id")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(404))
@@ -118,7 +122,7 @@ open class UpdateRoomTest {
         given()
             .contentType(ContentType.JSON)
             .body("""{"name":"No Auth Room"}""")
-            .`when`().patch("/schools/rooms/some-id")
+            .`when`().patch("/school/rooms/some-id")
             .then()
                 .statusCode(401)
                 .body("status",  `is`(401))
@@ -136,7 +140,7 @@ open class UpdateRoomTest {
             .header("Authorization", "Bearer teacher-upd-room-token")
             .contentType(ContentType.JSON)
             .body("""{"name":"Teacher Room"}""")
-            .`when`().patch("/schools/rooms/some-id")
+            .`when`().patch("/school/rooms/some-id")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(403))

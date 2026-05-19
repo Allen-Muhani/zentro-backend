@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 
 /**
- * Tests for `PATCH /schools/profile`.
+ * Tests for `PATCH /school/profile`.
  */
 @QuarkusTest
 open class UpdateSchoolProfileTest {
@@ -46,7 +46,7 @@ open class UpdateSchoolProfileTest {
             .header("Authorization", "Bearer update-token")
             .contentType(ContentType.JSON)
             .body("""{"type":"SCHOOL","fedUid":"uid-school-upd-1","name":"New Name","county":"Mombasa"}""")
-            .`when`().patch("/schools/profile")
+            .`when`().patch("/school/profile")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(200))
@@ -71,7 +71,7 @@ open class UpdateSchoolProfileTest {
             .header("Authorization", "Bearer update-token-2")
             .contentType(ContentType.JSON)
             .body("""{"type":"SCHOOL","fedUid":"attacker-uid","name":"Updated School","email":"hacker@evil.com","phoneNumber":"0799999999"}""")
-            .`when`().patch("/schools/profile")
+            .`when`().patch("/school/profile")
             .then()
                 .statusCode(200)
                 .body("payload.fedUid", `is`("uid-school-upd-2"))
@@ -83,7 +83,7 @@ open class UpdateSchoolProfileTest {
         given()
             .contentType(ContentType.JSON)
             .body("""{"name":"No Auth School"}""")
-            .`when`().patch("/schools/profile")
+            .`when`().patch("/school/profile")
             .then()
                 .statusCode(401)
                 .body("status",  `is`(401))

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 
 /**
- * Tests for `GET /schools/subjects`.
+ * Tests for `GET /school/subjects`.
  */
 @QuarkusTest
 open class ListSubjectsTest {
@@ -29,7 +29,7 @@ open class ListSubjectsTest {
     @Test
     fun `endpoint exists and returns 200 success envelope`() {
         given()
-            .`when`().get("/schools/subjects")
+            .`when`().get("/school/subjects")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(200))
@@ -41,7 +41,7 @@ open class ListSubjectsTest {
         val expectedSymbols = CbcDataSeeder.SUBJECTS.map { it.symbol }.toTypedArray()
 
         given()
-            .`when`().get("/schools/subjects")
+            .`when`().get("/school/subjects")
             .then()
                 .statusCode(200)
                 .body("payload", hasSize<Any>(10))
@@ -51,7 +51,7 @@ open class ListSubjectsTest {
     @Test
     fun `includes correct periods per week for each subject`() {
         given()
-            .`when`().get("/schools/subjects")
+            .`when`().get("/school/subjects")
             .then()
                 .statusCode(200)
                 .body("payload.find { it.symbol == 'ENG' }.periodsPerWeek", `is`(5))
@@ -65,7 +65,7 @@ open class ListSubjectsTest {
     @Test
     fun `marks practical subjects with requiresDoubledPeriod and correct room tags`() {
         given()
-            .`when`().get("/schools/subjects")
+            .`when`().get("/school/subjects")
             .then()
                 .statusCode(200)
                 .body("payload.find { it.symbol == 'SCI' }.requiresDoubledPeriod", `is`(true))
@@ -82,7 +82,7 @@ open class ListSubjectsTest {
     @Test
     fun `marks PPI as fixed and non-practical subjects correctly`() {
         given()
-            .`when`().get("/schools/subjects")
+            .`when`().get("/school/subjects")
             .then()
                 .statusCode(200)
                 .body("payload.find { it.symbol == 'PPI' }.isPpiFixed",            `is`(true))

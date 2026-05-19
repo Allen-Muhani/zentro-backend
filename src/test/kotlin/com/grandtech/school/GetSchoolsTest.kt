@@ -14,11 +14,11 @@ open class GetSchoolsTest {
     @Test
     fun `returns 200 success envelope with live message`() {
         given()
-            .`when`().get("/schools")
+            .`when`().get("/school")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(200))
                 .body("message", `is`("success"))
-                .body("payload", `is`("Schools endpoint is live"))
+                .body("payload", `is`("School endpoint is live"))
     }
 }
