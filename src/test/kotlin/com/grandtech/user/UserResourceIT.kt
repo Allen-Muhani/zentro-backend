@@ -1,4 +1,4 @@
-package com.grandtech
+package com.grandtech.user
 
 import io.quarkus.test.junit.QuarkusIntegrationTest
 import io.restassured.RestAssured.given
@@ -7,10 +7,7 @@ import org.hamcrest.CoreMatchers.nullValue
 import org.junit.jupiter.api.Test
 
 /**
- * Integration tests for [UserResource] that run against a packaged Quarkus application.
- *
- * These tests verify the full request-response cycle including CDI wiring, HTTP
- * routing, and JSON serialisation — without mocking any internal dependencies.
+ * Integration tests for user endpoints that run against the packaged Quarkus application.
  */
 @QuarkusIntegrationTest
 class UserResourceIT {
@@ -25,7 +22,7 @@ class UserResourceIT {
             .`when`().get("/users/me")
             .then()
                 .statusCode(200)
-                .body("status", `is`(401))
+                .body("status",  `is`(401))
                 .body("message", `is`("Unauthorized: missing Authorization header"))
                 .body("payload", nullValue())
     }
