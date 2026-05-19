@@ -1,12 +1,17 @@
 package com.grandtech
 
+import com.grandtech.auth.Authenticated
+import com.grandtech.model.School
 import com.grandtech.model.Subject
+import com.grandtech.service.SchoolService
 import com.grandtech.service.SubjectRepository
 import com.grandtech.utils.ApiResponse
 import jakarta.inject.Inject
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.MediaType
 
 /** REST resource exposing school-related endpoints for the Zentro API. */
@@ -16,6 +21,10 @@ class SchoolResource {
     /** Repository that queries Neo4j for subject and subject-type nodes. */
     @Inject
     lateinit var subjectRepository: SubjectRepository
+
+    /** Service that executes school-specific Neo4j queries. */
+    @Inject
+    lateinit var schoolService: SchoolService
 
     /**
      * Returns a confirmation that the schools endpoint is reachable.
@@ -39,4 +48,30 @@ class SchoolResource {
     @Produces(MediaType.APPLICATION_JSON)
     fun listSubjects(): ApiResponse<List<Subject>> =
         ApiResponse(200, "Success", subjectRepository.listAll())
+
+    /**
+     * Returns the authenticated school's profile.
+     *
+     * The [Authenticated] guard verifies the bearer token and ensures the Firebase
+     * UID belongs to a registered user before this handler runs. The UID is then
+     * used to fetch the [School] node directly from Neo4j.
+     *
+     * @param requestContext the JAX-RS request context carrying the `fedUid` property
+     *                       set by [com.grandtech.auth.AuthFilter]
+     * @return an [ApiResponse] carrying the [School] on success, or 403 if the token
+     *         belongs to a non-school account
+     */
+    @GET
+    @Path("/profile")
+    @Authenticated
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getSchoolDetails(@Context requestContext: ContainerRequestContext): ApiResponse<School> {
+        val fedUid = requestContext.getProperty("fedUid") as String
+        val school = schoolService.getSchoolByFedUid(fedUid)
+        return if (school != null) {
+            ApiResponse(200, "Success", school)
+        } else {
+            ApiResponse(403, "Forbidden: account is not a school", null)
+        }
+    }
 }
