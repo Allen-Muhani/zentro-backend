@@ -76,15 +76,14 @@ class ListStreamsRepoTest : StreamServiceTestBase() {
     @Test
     fun `listStreams hydrates formTeacher from FORM_TEACHER relationship`() {
         trackSchool("lsr-school-5")
-        trackTeacher("lsr-teacher-5")
         userRepository.saveSchool(School(fedUid = "lsr-school-5"))
-        userRepository.saveTeacher(Teacher(fedUid = "lsr-teacher-5", name = "Mr Kamau", email = "kamau@school.ke"))
-        upsertStream("lsr-school-5", Stream(gradeLevel = 9, name = "Purple", formTeacher = Teacher(fedUid = "lsr-teacher-5")))
+        val teacher = createTeacher("lsr-school-5", "Mr Kamau", "kamau@school.ke")
+        upsertStream("lsr-school-5", Stream(gradeLevel = 9, name = "Purple", formTeacher = Teacher(id = teacher.id)))
 
         val stream = streamRepository.listStreams("lsr-school-5").first()
 
         assertNotNull(stream.formTeacher)
-        assertEquals("lsr-teacher-5", stream.formTeacher?.fedUid)
+        assertEquals(teacher.id, stream.formTeacher?.id)
         assertEquals("Mr Kamau", stream.formTeacher?.name)
         assertEquals("kamau@school.ke", stream.formTeacher?.email)
     }

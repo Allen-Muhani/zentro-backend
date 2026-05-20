@@ -18,7 +18,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 )
 @JsonSubTypes(
     JsonSubTypes.Type(value = School::class, name = "SCHOOL"),
-    JsonSubTypes.Type(value = Teacher::class, name = "TEACHER"),
 )
 abstract class User {
 

@@ -92,6 +92,12 @@ class SubjectRepository {
         }
 
     /**
+     * Maps a Neo4j [org.neo4j.driver.types.Node] to a [Subject].
+     * Used by repositories that return subject nodes from join queries.
+     */
+    internal fun mapNodeToSubject(node: org.neo4j.driver.types.Node): Subject = node.toSubject()
+
+    /**
      * Maps a raw Neo4j node to a [Subject] instance by reading its stored properties.
      *
      * @return the [Subject] populated from this node's property map

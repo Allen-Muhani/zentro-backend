@@ -1,23 +1,29 @@
 package com.grandtech.model
 
 /**
- * User account representing a teacher in the Zentro system.
+ * A teaching staff member registered by a school for timetable scheduling.
  *
- * Stored in Neo4j as a node with labels `User` and `Teacher`.
- * Profile fields are nullable on creation and populated by a subsequent update request.
+ * Stored as `(:Teacher)` linked to the school via `HAS_TEACHER` and to
+ * their assigned learning areas via `TEACHES`.
  *
- * @property fedUid     Firebase Authentication UID linking this account to the auth provider
- * @property name       full name of the teacher
- * @property email      contact email address of the teacher
- * @property tscNumber  Teachers Service Commission registration number (optional)
+ * @property id                Neo4j-generated UUID; null before persistence
+ * @property name              full name of the teacher
+ * @property email             contact email address
+ * @property phone             optional phone number
+ * @property tscNumber         Teachers Service Commission registration number (optional)
+ * @property maxPeriodsPerWeek upper bound on weekly lessons; defaults to 23
+ * @property maxPeriodsPerDay  upper bound on daily lessons; defaults to 6
+ * @property subjectIds        subject IDs supplied on create (1–2); ignored on read
+ * @property subjects          full subject objects returned on read; null on create
  */
 data class Teacher(
-    override val fedUid: String,
+    val id: String? = null,
     val name: String? = null,
     val email: String? = null,
+    val phone: String? = null,
     val tscNumber: String? = null,
-) : User() {
-
-    /** Returns the discriminator value identifying this user as a teacher. */
-    override fun getType() = "TEACHER"
-}
+    val maxPeriodsPerWeek: Int? = null,
+    val maxPeriodsPerDay: Int? = null,
+    val subjectIds: List<String>? = null,
+    val subjects: List<Subject>? = null,
+)

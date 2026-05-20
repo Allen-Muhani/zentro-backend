@@ -2,7 +2,6 @@ package com.grandtech.service.user
 
 import com.google.firebase.auth.FirebaseAuthException
 import com.grandtech.model.School
-import com.grandtech.model.Teacher
 import com.grandtech.utils.ApiResponse
 import io.quarkus.test.junit.QuarkusTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -83,18 +82,4 @@ class RegisterSchoolTest : UserServiceTestBase() {
         assertNull(res.payload)
     }
 
-    @Test
-    fun `register school with email already in teachers table returns 502`() {
-        track("uid-teach-s", "uid-new-ss")
-        userRepository.saveTeacher(Teacher(fedUid = "uid-teach-s", email = "teach-s@test.com"))
-
-        val tok = buildToken("uid-new-ss", "teach-s@test.com", "New")
-        Mockito.`when`(firebaseAuthService.verifyToken("tok")).thenReturn(tok)
-
-        val res: ApiResponse<School> = userService.registerSchool("tok")
-
-        assertEquals(502, res.status)
-        assertEquals("School already in the system", res.message)
-        assertNull(res.payload)
-    }
 }

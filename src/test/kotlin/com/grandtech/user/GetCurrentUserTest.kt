@@ -1,7 +1,7 @@
 package com.grandtech.user
 
 import com.google.firebase.auth.FirebaseAuthException
-import com.grandtech.model.Teacher
+import com.grandtech.model.School
 import com.grandtech.service.UserService
 import io.quarkus.test.InjectMock
 import io.quarkus.test.junit.QuarkusTest
@@ -22,7 +22,7 @@ class GetCurrentUserTest {
 
     @Test
     fun `with valid token returns the user payload`() {
-        val mockUser = Teacher(fedUid = "firebase-uid-123", email = "user@example.com", name = "Test User")
+        val mockUser = School(fedUid = "firebase-uid-123", email = "school@example.com", name = "Test School")
         Mockito.`when`(userService.getUserFromToken("Bearer valid-token")).thenReturn(mockUser)
 
         given()
@@ -30,11 +30,11 @@ class GetCurrentUserTest {
             .`when`().get("/users/me")
             .then()
                 .statusCode(200)
-                .body("status",          `is`(200))
-                .body("message",         `is`("success"))
-                .body("payload.fedUid",  `is`("firebase-uid-123"))
-                .body("payload.email",   `is`("user@example.com"))
-                .body("payload.name",    `is`("Test User"))
+                .body("status",         `is`(200))
+                .body("message",        `is`("success"))
+                .body("payload.fedUid", `is`("firebase-uid-123"))
+                .body("payload.email",  `is`("school@example.com"))
+                .body("payload.name",   `is`("Test School"))
     }
 
     @Test

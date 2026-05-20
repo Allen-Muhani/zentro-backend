@@ -2,7 +2,6 @@ package com.grandtech
 
 import com.google.firebase.auth.FirebaseAuthException
 import com.grandtech.model.School
-import com.grandtech.model.Teacher
 import com.grandtech.model.User
 import com.grandtech.service.UserService
 import com.grandtech.utils.ApiResponse
@@ -47,23 +46,6 @@ class UserResource {
         } catch (e: FirebaseAuthException) {
             ApiResponse(401, "Unauthorized: ${e.message}", null)
         }
-    }
-
-    /**
-     * Registers a new teacher account for the authenticated Firebase user.
-     *
-     * @param authHeader the Authorization header containing the Firebase ID token
-     * @return an [ApiResponse] carrying the new [Teacher] on success,
-     *         or a 401 if the Authorization header is missing
-     */
-    @POST
-    @Path("/register/teacher")
-    @Produces(MediaType.APPLICATION_JSON)
-    fun registerTeacher(@HeaderParam(HttpHeaders.AUTHORIZATION) authHeader: String?): ApiResponse<Teacher> {
-        if (authHeader.isNullOrBlank()) {
-            return ApiResponse(401, "Unauthorized: missing Authorization header", null)
-        }
-        return userService.registerTeacher(authHeader)
     }
 
     /**

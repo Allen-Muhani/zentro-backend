@@ -102,38 +102,36 @@ class UpsertStreamUpdateTest : StreamServiceTestBase() {
     @Test
     fun `upsertStream replaces form teacher when a new teacher is provided`() {
         trackSchool("usu-school-6")
-        trackTeacher("usu-teacher-6a", "usu-teacher-6b")
         userRepository.saveSchool(School(fedUid = "usu-school-6"))
-        userRepository.saveTeacher(Teacher(fedUid = "usu-teacher-6a", name = "Ms Auma"))
-        userRepository.saveTeacher(Teacher(fedUid = "usu-teacher-6b", name = "Mr Mwangi"))
+        val teacherA = createTeacher("usu-school-6", "Ms Auma", "auma@usu.ke")
+        val teacherB = createTeacher("usu-school-6", "Mr Mwangi", "mwangi@usu.ke")
         val created = upsertStream(
             "usu-school-6",
-            Stream(gradeLevel = 7, name = "Red", formTeacher = Teacher(fedUid = "usu-teacher-6a")),
+            Stream(gradeLevel = 7, name = "Red", formTeacher = Teacher(id = teacherA.id)),
         )
 
         val updated = upsertStream(
             "usu-school-6",
-            Stream(id = created.id, formTeacher = Teacher(fedUid = "usu-teacher-6b")),
+            Stream(id = created.id, formTeacher = Teacher(id = teacherB.id)),
         )
 
-        assertEquals("usu-teacher-6b", updated.formTeacher?.fedUid)
+        assertEquals(teacherB.id, updated.formTeacher?.id)
         assertEquals("Mr Mwangi", updated.formTeacher?.name)
     }
 
     @Test
     fun `upsertStream keeps existing form teacher when formTeacher is not provided`() {
         trackSchool("usu-school-7")
-        trackTeacher("usu-teacher-7")
         userRepository.saveSchool(School(fedUid = "usu-school-7"))
-        userRepository.saveTeacher(Teacher(fedUid = "usu-teacher-7", name = "Ms Chebet"))
+        val teacher = createTeacher("usu-school-7", "Ms Chebet", "chebet@usu.ke")
         val created = upsertStream(
             "usu-school-7",
-            Stream(gradeLevel = 9, name = "Gold", formTeacher = Teacher(fedUid = "usu-teacher-7")),
+            Stream(gradeLevel = 9, name = "Gold", formTeacher = Teacher(id = teacher.id)),
         )
 
         val updated = upsertStream("usu-school-7", Stream(id = created.id, name = "Platinum"))
 
-        assertEquals("usu-teacher-7", updated.formTeacher?.fedUid)
+        assertEquals(teacher.id, updated.formTeacher?.id)
     }
 
     @Test
@@ -170,18 +168,17 @@ class UpsertStreamUpdateTest : StreamServiceTestBase() {
     @Test
     fun `upsertStream returns 409 when teacher is already assigned to another stream`() {
         trackSchool("usu-school-10")
-        trackTeacher("usu-teacher-10")
         userRepository.saveSchool(School(fedUid = "usu-school-10"))
-        userRepository.saveTeacher(Teacher(fedUid = "usu-teacher-10", name = "Mr Kiprop"))
+        val teacher = createTeacher("usu-school-10", "Mr Kiprop", "kiprop@usu.ke")
         upsertStream(
             "usu-school-10",
-            Stream(gradeLevel = 7, name = "Blue", formTeacher = Teacher(fedUid = "usu-teacher-10")),
+            Stream(gradeLevel = 7, name = "Blue", formTeacher = Teacher(id = teacher.id)),
         )
         val other = upsertStream("usu-school-10", Stream(gradeLevel = 8, name = "Red"))
 
         val response = streamService.upsertStream(
             "usu-school-10",
-            Stream(id = other.id, formTeacher = Teacher(fedUid = "usu-teacher-10")),
+            Stream(id = other.id, formTeacher = Teacher(id = teacher.id)),
         )
 
         assertEquals(409, response.status)

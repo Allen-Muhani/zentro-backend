@@ -3,7 +3,6 @@ package com.grandtech.service
 import com.google.firebase.auth.FirebaseAuthException
 import com.grandtech.auth.FirebaseAuthService
 import com.grandtech.model.School
-import com.grandtech.model.Teacher
 import com.grandtech.model.User
 import com.grandtech.repository.UserRepository
 import com.grandtech.utils.ApiResponse
@@ -13,8 +12,8 @@ import jakarta.inject.Inject
 /**
  * Business logic for user account management.
  *
- * Handles Firebase token verification, user lookup, and registration of both
- * school and teacher accounts. All persistence is delegated to [UserRepository].
+ * Handles Firebase token verification, user lookup, and registration of school accounts.
+ * All persistence is delegated to [UserRepository].
  */
 @ApplicationScoped
 class UserService {
@@ -41,33 +40,6 @@ class UserService {
     }
 
     /**
-     * Registers a new teacher account linked to the supplied Firebase token.
-     *
-     * @param idToken the raw Firebase ID token from the Authorization header
-     * @return status 200 with the new [Teacher] on success,
-     *         502 if the fedUid or email is already taken,
-     *         or 500 if the token is invalid or expired
-     */
-    fun registerTeacher(idToken: String): ApiResponse<Teacher> {
-        val token = try {
-            firebaseAuthService.verifyToken(idToken)
-        } catch (e: FirebaseAuthException) {
-            return ApiResponse(500, "Invalid bearer token!!", null)
-        }
-        val fedUid = token.uid
-        val email = token.email
-        if (userRepository.existsByFedUid(fedUid) ||
-            userRepository.userExistsByEmail(email) ||
-            userRepository.userExistsByEmail(email)
-        ) {
-            return ApiResponse(502, "User already in the system!!!", null)
-        }
-        val teacher = Teacher(fedUid = fedUid, name = token.name, email = email)
-        userRepository.saveTeacher(teacher)
-        return ApiResponse(200, "Success", teacher)
-    }
-
-    /**
      * Registers a new school account linked to the supplied Firebase token.
      *
      * @param idToken the raw Firebase ID token from the Authorization header
@@ -83,10 +55,7 @@ class UserService {
         }
         val fedUid = token.uid
         val email = token.email
-        if (userRepository.existsByFedUid(fedUid) ||
-            userRepository.teacherExistsByEmail(email) ||
-            userRepository.schoolExistsByEmail(email)
-        ) {
+        if (userRepository.existsByFedUid(fedUid) || userRepository.schoolExistsByEmail(email)) {
             return ApiResponse(502, "School already in the system", null)
         }
         val school = School(fedUid = fedUid)
