@@ -148,6 +148,23 @@ class TeacherRepository {
     }
 
     /**
+     * Deletes the teacher with [teacherId] owned by [schoolFedUid] via `DETACH DELETE`,
+     * which also removes all relationships (HAS_TEACHER, TEACHES, FORM_TEACHER, etc.).
+     * Returns false if no matching teacher was found under this school.
+     */
+    fun deleteTeacher(schoolFedUid: String, teacherId: String): Boolean =
+        driver.session().use { session ->
+            val result = session.run(
+                """
+                MATCH (:School {fedUid: ${'$'}fedUid})-[:HAS_TEACHER]->(t:Teacher {id: ${'$'}teacherId})
+                DETACH DELETE t
+                """.trimIndent(),
+                mapOf("fedUid" to schoolFedUid, "teacherId" to teacherId),
+            )
+            result.consume().counters().nodesDeleted() > 0
+        }
+
+    /**
      * Returns all teachers belonging to [schoolFedUid] with their subjects, ordered by name.
      * Returns an empty list when the school has no teachers.
      */
