@@ -49,7 +49,7 @@ open class ListRoomsTest {
 
         given()
             .header("Authorization", "Bearer list-token-1")
-            .`when`().get("/school/rooms")
+            .`when`().get("/school/room/list")
             .then()
                 .statusCode(200)
                 .body("status",                         `is`(200))
@@ -74,7 +74,7 @@ open class ListRoomsTest {
 
         given()
             .header("Authorization", "Bearer list-token-2")
-            .`when`().get("/school/rooms")
+            .`when`().get("/school/room/list")
             .then()
                 .statusCode(200)
                 .body("status",         `is`(200))
@@ -84,7 +84,7 @@ open class ListRoomsTest {
     @Test
     fun `without auth header returns 401`() {
         given()
-            .`when`().get("/school/rooms")
+            .`when`().get("/school/room/list")
             .then()
                 .statusCode(401)
                 .body("status",  `is`(401))
@@ -100,7 +100,7 @@ open class ListRoomsTest {
 
         given()
             .header("Authorization", "Bearer teacher-list-token")
-            .`when`().get("/school/rooms")
+            .`when`().get("/school/room/list")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(403))

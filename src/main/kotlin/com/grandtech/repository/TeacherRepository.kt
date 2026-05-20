@@ -5,6 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import org.neo4j.driver.Driver
 import org.neo4j.driver.Record
+import org.neo4j.driver.types.Node
 
 /** Executes all Neo4j read and write operations specific to [Teacher] nodes. */
 @ApplicationScoped
@@ -66,6 +67,20 @@ class TeacherRepository {
                 name      = record[col(prefix, "name")].takeUnless { it.isNull }?.asString(),
                 email     = record[col(prefix, "email")].takeUnless { it.isNull }?.asString(),
                 tscNumber = record[col(prefix, "tscNumber")].takeUnless { it.isNull }?.asString(),
+            )
+        }
+
+    /**
+     * Maps a Neo4j [Node] (returned as a whole node via `RETURN t`) to a [Teacher].
+     * Returns null if `fedUid` is missing on the node.
+     */
+    internal fun mapNodeToTeacher(node: Node): Teacher? =
+        node["fedUid"].takeUnless { it.isNull }?.asString()?.let { fedUid ->
+            Teacher(
+                fedUid    = fedUid,
+                name      = node["name"].takeUnless { it.isNull }?.asString(),
+                email     = node["email"].takeUnless { it.isNull }?.asString(),
+                tscNumber = node["tscNumber"].takeUnless { it.isNull }?.asString(),
             )
         }
 

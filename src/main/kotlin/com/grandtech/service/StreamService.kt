@@ -71,6 +71,14 @@ class StreamService {
 
         val result = streamRepository.fetchStream(streamId)
             ?: return ApiResponse(404, "Stream not found")
-        return ApiResponse( message =if (stream.id == null) "Stream created" else "Stream updated", payload = result)
+        return ApiResponse(message = if (stream.id == null) "Stream created" else "Stream updated", payload = result)
     }
+
+    /**
+     * Returns all streams belonging to [schoolFedUid], each with its optional
+     * `HOME_ROOM` and `FORM_TEACHER` relationships, ordered by grade level then name.
+     * Returns a 200 with an empty list when the school has no streams.
+     */
+    fun listStreams(schoolFedUid: String): ApiResponse<List<Stream>> =
+        ApiResponse(payload = streamRepository.listStreams(schoolFedUid))
 }

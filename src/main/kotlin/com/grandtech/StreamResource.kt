@@ -7,6 +7,7 @@ import com.grandtech.service.StreamService
 import com.grandtech.utils.ApiResponse
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -27,6 +28,23 @@ class StreamResource {
     lateinit var streamService: StreamService
 
     /**
+     * Returns all streams belonging to the authenticated school, ordered by grade level then name.
+     * Each stream includes its optional `HOME_ROOM` and `FORM_TEACHER` relationships.
+     */
+    @GET
+    @Path("/list")
+    @Authenticated
+    @Produces(MediaType.APPLICATION_JSON)
+    fun listStreams(
+        @Context requestContext: ContainerRequestContext,
+    ): ApiResponse<List<Stream>> {
+        val fedUid = requestContext.getProperty("fedUid") as String
+        schoolService.getSchoolByFedUid(fedUid)
+            ?: return ApiResponse(403, "Forbidden: account is not a school", null)
+        return streamService.listStreams(fedUid)
+    }
+
+    /**
      * Creates or updates a stream belonging to the authenticated school.
      *
      * Omit [Stream.id] to create; supply it to update. All business-rule validation
@@ -34,6 +52,7 @@ class StreamResource {
      * [StreamService] and reflected in the response status.
      */
     @POST
+    @Path("/upsert")
     @Authenticated
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

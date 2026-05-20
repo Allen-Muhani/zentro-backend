@@ -43,7 +43,7 @@ open class DeleteRoomTest {
 
         given()
             .header("Authorization", "Bearer del-token-1")
-            .`when`().delete("/school/rooms/room-uuid-del-1")
+            .`when`().delete("/school/room/delete/room-uuid-del-1")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(200))
@@ -63,7 +63,7 @@ open class DeleteRoomTest {
 
         given()
             .header("Authorization", "Bearer del-token-2")
-            .`when`().delete("/school/rooms/nonexistent-room")
+            .`when`().delete("/school/room/delete/nonexistent-room")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(404))
@@ -73,7 +73,7 @@ open class DeleteRoomTest {
     @Test
     fun `without auth header returns 401`() {
         given()
-            .`when`().delete("/school/rooms/some-room-id")
+            .`when`().delete("/school/room/delete/some-room-id")
             .then()
                 .statusCode(401)
                 .body("status",  `is`(401))
@@ -89,7 +89,7 @@ open class DeleteRoomTest {
 
         given()
             .header("Authorization", "Bearer teacher-del-token")
-            .`when`().delete("/school/rooms/some-room-id")
+            .`when`().delete("/school/room/delete/some-room-id")
             .then()
                 .statusCode(200)
                 .body("status",  `is`(403))
