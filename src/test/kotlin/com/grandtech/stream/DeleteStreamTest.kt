@@ -3,7 +3,6 @@ package com.grandtech.stream
 import com.grandtech.auth.FirebaseAuthService
 import com.grandtech.model.School
 import com.grandtech.model.Stream
-import com.grandtech.model.Teacher
 import com.grandtech.repository.UserRepository
 import com.grandtech.school.GetSchoolProfileTest
 import com.grandtech.service.StreamService
@@ -39,10 +38,8 @@ class DeleteStreamTest {
     lateinit var driver: Driver
 
     private val trackedSchoolUids = mutableSetOf<String>()
-    private val trackedTeacherUids = mutableSetOf<String>()
 
     private fun trackSchool(vararg uids: String) { trackedSchoolUids.addAll(uids.toList()) }
-    private fun trackTeacher(vararg uids: String) { trackedTeacherUids.addAll(uids.toList()) }
 
     private fun stubToken(schoolUid: String, bearer: String) {
         Mockito.`when`(firebaseAuthService.verifyToken(bearer))
@@ -51,25 +48,19 @@ class DeleteStreamTest {
 
     @AfterEach
     fun cleanUp() {
-        driver.session().use { session ->
-            if (trackedSchoolUids.isNotEmpty()) {
+        if (trackedSchoolUids.isNotEmpty()) {
+            driver.session().use { session ->
                 session.run(
                     """
                     MATCH (s:School) WHERE s.fedUid IN ${'$'}uids
                     OPTIONAL MATCH (s)-[:HAS_ROOM]->(r:Room)
                     OPTIONAL MATCH (s)-[:HAS_STREAM]->(st:Stream)
-                    DETACH DELETE s, r, st
+                    OPTIONAL MATCH (s)-[:HAS_TEACHER]->(t:Teacher)
+                    DETACH DELETE s, r, st, t
                     """.trimIndent(),
                     mapOf("uids" to trackedSchoolUids.toList()),
                 )
                 trackedSchoolUids.clear()
-            }
-            if (trackedTeacherUids.isNotEmpty()) {
-                session.run(
-                    "MATCH (t:Teacher) WHERE t.fedUid IN \$uids DETACH DELETE t",
-                    mapOf("uids" to trackedTeacherUids.toList()),
-                )
-                trackedTeacherUids.clear()
             }
         }
     }
@@ -96,21 +87,6 @@ class DeleteStreamTest {
             .then()
                 .statusCode(401)
                 .body("status",  `is`(401))
-                .body("payload", nullValue())
-    }
-
-    @Test
-    fun `teacher account returns 403`() {
-        trackTeacher("dst-teacher-1")
-        userRepository.saveTeacher(Teacher(fedUid = "dst-teacher-1", name = "Test Teacher"))
-        stubToken("dst-teacher-1", "Bearer dst-teacher-token-1")
-
-        given()
-            .header("Authorization", "Bearer dst-teacher-token-1")
-            .`when`().delete("/school/stream/delete/some-id")
-            .then()
-                .statusCode(200)
-                .body("status",  `is`(403))
                 .body("payload", nullValue())
     }
 

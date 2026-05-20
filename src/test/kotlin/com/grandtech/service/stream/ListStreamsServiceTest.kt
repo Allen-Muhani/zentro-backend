@@ -87,15 +87,14 @@ class ListStreamsServiceTest : StreamServiceTestBase() {
     @Test
     fun `listStreams response includes formTeacher when present`() {
         trackSchool("lss-school-6")
-        trackTeacher("lss-teacher-6")
         userRepository.saveSchool(School(fedUid = "lss-school-6"))
-        userRepository.saveTeacher(Teacher(fedUid = "lss-teacher-6", name = "Mrs Wanjiku"))
-        upsertStream("lss-school-6", Stream(gradeLevel = 7, name = "Jade", formTeacher = Teacher(fedUid = "lss-teacher-6")))
+        val teacher = createTeacher("lss-school-6", "Mrs Wanjiku", "wanjiku@lss.ke")
+        upsertStream("lss-school-6", Stream(gradeLevel = 7, name = "Jade", formTeacher = Teacher(id = teacher.id)))
 
         val stream = streamService.listStreams("lss-school-6").payload!!.first()
 
         assertNotNull(stream.formTeacher)
-        assertEquals("lss-teacher-6", stream.formTeacher?.fedUid)
+        assertEquals(teacher.id, stream.formTeacher?.id)
         assertEquals("Mrs Wanjiku", stream.formTeacher?.name)
     }
 }

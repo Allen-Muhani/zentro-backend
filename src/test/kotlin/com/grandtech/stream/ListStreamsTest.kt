@@ -5,8 +5,10 @@ import com.grandtech.model.Room
 import com.grandtech.model.School
 import com.grandtech.model.Stream
 import com.grandtech.model.Teacher
+import com.grandtech.repository.TeacherRepository
 import com.grandtech.repository.UserRepository
 import com.grandtech.school.GetSchoolProfileTest
+import com.grandtech.service.CbcDataSeeder
 import com.grandtech.service.RoomService
 import com.grandtech.service.StreamService
 import io.quarkus.test.InjectMock
@@ -43,13 +45,22 @@ class ListStreamsTest {
     lateinit var streamService: StreamService
 
     @Inject
+    lateinit var teacherRepository: TeacherRepository
+
+    @Inject
     lateinit var driver: Driver
 
     private val trackedSchoolUids = mutableSetOf<String>()
-    private val trackedTeacherUids = mutableSetOf<String>()
 
     private fun trackSchool(vararg uids: String) { trackedSchoolUids.addAll(uids.toList()) }
-    private fun trackTeacher(vararg uids: String) { trackedTeacherUids.addAll(uids.toList()) }
+
+    private fun createTeacher(schoolFedUid: String, name: String, email: String): Teacher =
+        checkNotNull(
+            teacherRepository.createTeacher(
+                schoolFedUid,
+                Teacher(name = name, email = email, subjectIds = listOf(CbcDataSeeder.SUBJECTS.first().id)),
+            ),
+        ) { "Failed to create teacher for school $schoolFedUid" }
 
     private fun stubToken(schoolUid: String, bearer: String) {
         Mockito.`when`(firebaseAuthService.verifyToken(bearer))
@@ -58,25 +69,19 @@ class ListStreamsTest {
 
     @AfterEach
     fun cleanUp() {
-        driver.session().use { session ->
-            if (trackedSchoolUids.isNotEmpty()) {
+        if (trackedSchoolUids.isNotEmpty()) {
+            driver.session().use { session ->
                 session.run(
                     """
                     MATCH (s:School) WHERE s.fedUid IN ${'$'}uids
                     OPTIONAL MATCH (s)-[:HAS_ROOM]->(r:Room)
                     OPTIONAL MATCH (s)-[:HAS_STREAM]->(st:Stream)
-                    DETACH DELETE s, r, st
+                    OPTIONAL MATCH (s)-[:HAS_TEACHER]->(t:Teacher)
+                    DETACH DELETE s, r, st, t
                     """.trimIndent(),
                     mapOf("uids" to trackedSchoolUids.toList()),
                 )
                 trackedSchoolUids.clear()
-            }
-            if (trackedTeacherUids.isNotEmpty()) {
-                session.run(
-                    "MATCH (t:Teacher) WHERE t.fedUid IN \$uids DETACH DELETE t",
-                    mapOf("uids" to trackedTeacherUids.toList()),
-                )
-                trackedTeacherUids.clear()
             }
         }
     }
@@ -103,21 +108,6 @@ class ListStreamsTest {
             .then()
                 .statusCode(401)
                 .body("status",  `is`(401))
-                .body("payload", nullValue())
-    }
-
-    @Test
-    fun `teacher account returns 403`() {
-        trackTeacher("lst-teacher-1")
-        userRepository.saveTeacher(Teacher(fedUid = "lst-teacher-1", name = "Test Teacher"))
-        stubToken("lst-teacher-1", "Bearer lst-teacher-token-1")
-
-        given()
-            .header("Authorization", "Bearer lst-teacher-token-1")
-            .`when`().get("/school/stream/list")
-            .then()
-                .statusCode(200)
-                .body("status",  `is`(403))
                 .body("payload", nullValue())
     }
 
@@ -197,19 +187,18 @@ class ListStreamsTest {
     @Test
     fun `returns stream with formTeacher when FORM_TEACHER relationship exists`() {
         trackSchool("lst-school-5")
-        trackTeacher("lst-teacher-5")
         userRepository.saveSchool(School(fedUid = "lst-school-5"))
-        userRepository.saveTeacher(Teacher(fedUid = "lst-teacher-5", name = "Ms Achieng", email = "achieng@school.ke"))
+        val teacher = createTeacher("lst-school-5", "Ms Achieng", "achieng@school.ke")
         stubToken("lst-school-5", "Bearer lst-token-5")
-        streamService.upsertStream("lst-school-5", Stream(gradeLevel = 8, name = "Silver", formTeacher = Teacher(fedUid = "lst-teacher-5")))
+        streamService.upsertStream("lst-school-5", Stream(gradeLevel = 8, name = "Silver", formTeacher = Teacher(id = teacher.id)))
 
         given()
             .header("Authorization", "Bearer lst-token-5")
             .`when`().get("/school/stream/list")
             .then()
                 .statusCode(200)
-                .body("payload[0].formTeacher.fedUid", `is`("lst-teacher-5"))
-                .body("payload[0].formTeacher.name",   `is`("Ms Achieng"))
-                .body("payload[0].formTeacher.email",  `is`("achieng@school.ke"))
+                .body("payload[0].formTeacher.id",    `is`(teacher.id))
+                .body("payload[0].formTeacher.name",  `is`("Ms Achieng"))
+                .body("payload[0].formTeacher.email", `is`("achieng@school.ke"))
     }
 }

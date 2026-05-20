@@ -15,34 +15,12 @@ class TeacherRepository {
     @Inject
     lateinit var driver: Driver
 
-    /**
-     * Creates a `(:User:Teacher)` node and returns the persisted model.
-     * The caller must ensure [Teacher.fedUid] is unique before calling this.
-     */
-    fun saveTeacher(teacher: Teacher): Teacher {
-        driver.session().use { session ->
-            session.run(
-                """
-                CREATE (:User:Teacher {
-                    fedUid:    ${'$'}fedUid,
-                    name:      ${'$'}name,
-                    email:     ${'$'}email,
-                    tscNumber: ${'$'}tscNumber
-                })
-                """.trimIndent(),
-                mapOf(
-                    "fedUid"    to teacher.fedUid,
-                    "name"      to teacher.name,
-                    "email"     to teacher.email,
-                    "tscNumber" to teacher.tscNumber,
-                ),
-            )
-        }
-        return teacher
-    }
+    /** Used to map subject nodes returned from join queries. */
+    @Inject
+    lateinit var subjectRepository: SubjectRepository
 
-    /** Returns true if a `Teacher` node with the given [email] already exists. */
-    fun teacherExistsByEmail(email: String): Boolean =
+    /** Returns true if any `(:Teacher)` node already has the given email. */
+    fun existsByEmail(email: String): Boolean =
         driver.session().use { session ->
             session.run(
                 "MATCH (t:Teacher {email: \$email}) RETURN count(t) > 0 AS exists",
@@ -51,40 +29,126 @@ class TeacherRepository {
         }
 
     /**
-     * Maps a Neo4j [Record] to a [Teacher], or returns null when no teacher was present.
-     *
-     * [prefix] supports reuse across queries that alias teacher columns differently:
-     * - `prefix = ""`        → columns `fedUid`, `name`, `email`, `tscNumber`
-     * - `prefix = "teacher"` → columns `teacherFedUid`, `teacherName`, … (join queries)
-     *
-     * Returns null when the sentinel column `<prefix>fedUid` is null, which indicates that
-     * no teacher relationship was present in the result row.
+     * Creates a `(:Teacher)` node linked to the school via `HAS_TEACHER`, then links
+     * it to each subject in [Teacher.subjectIds] via `TEACHES`.
+     * Returns the full teacher with subjects, or null if the school does not exist.
      */
-    internal fun mapToTeacher(record: Record, prefix: String = ""): Teacher? =
-        record[col(prefix, "fedUid")].takeUnless { it.isNull }?.asString()?.let { fedUid ->
+    fun createTeacher(schoolFedUid: String, teacher: Teacher): Teacher? {
+        val subjectIds = teacher.subjectIds ?: emptyList()
+
+        val teacherId = driver.session().use { session ->
+            val result = session.run(
+                """
+                MATCH (s:School {fedUid: ${'$'}fedUid})
+                CREATE (t:Teacher {
+                    id:                randomUUID(),
+                    name:              ${'$'}name,
+                    email:             ${'$'}email,
+                    phone:             ${'$'}phone,
+                    tscNumber:         ${'$'}tscNumber,
+                    maxPeriodsPerWeek: COALESCE(${'$'}maxPeriodsPerWeek, 23),
+                    maxPeriodsPerDay:  COALESCE(${'$'}maxPeriodsPerDay, 6)
+                })
+                CREATE (s)-[:HAS_TEACHER]->(t)
+                RETURN t.id AS id
+                """.trimIndent(),
+                mapOf(
+                    "fedUid"            to schoolFedUid,
+                    "name"              to teacher.name,
+                    "email"             to teacher.email,
+                    "phone"             to teacher.phone,
+                    "tscNumber"         to teacher.tscNumber,
+                    "maxPeriodsPerWeek" to teacher.maxPeriodsPerWeek,
+                    "maxPeriodsPerDay"  to teacher.maxPeriodsPerDay,
+                ),
+            )
+            if (result.hasNext()) result.next()["id"].asString() else null
+        } ?: return null
+
+        if (subjectIds.isNotEmpty()) {
+            driver.session().use { session ->
+                session.run(
+                    """
+                    MATCH (t:Teacher {id: ${'$'}teacherId})
+                    UNWIND ${'$'}subjectIds AS subjectId
+                    MATCH (sub:Subject {id: subjectId})
+                    CREATE (t)-[:TEACHES]->(sub)
+                    """.trimIndent(),
+                    mapOf("teacherId" to teacherId, "subjectIds" to subjectIds),
+                )
+            }
+        }
+
+        return fetchTeacher(teacherId)
+    }
+
+    /**
+     * Returns all teachers belonging to [schoolFedUid] with their subjects, ordered by name.
+     * Returns an empty list when the school has no teachers.
+     */
+    fun listTeachers(schoolFedUid: String): List<Teacher> =
+        driver.session().use { session ->
+            session.run(
+                """
+                MATCH (:School {fedUid: ${'$'}fedUid})-[:HAS_TEACHER]->(t:Teacher)
+                OPTIONAL MATCH (t)-[:TEACHES]->(sub:Subject)
+                WITH t, collect(sub) AS subjects
+                RETURN t, subjects
+                ORDER BY t.name
+                """.trimIndent(),
+                mapOf("fedUid" to schoolFedUid),
+            ).list { mapToTeacher(it) }.filterNotNull()
+        }
+
+    /**
+     * Fetches a single teacher by [teacherId] with their subjects. Returns null if not found.
+     */
+    fun fetchTeacher(teacherId: String): Teacher? =
+        driver.session().use { session ->
+            val result = session.run(
+                """
+                MATCH (t:Teacher {id: ${'$'}teacherId})
+                OPTIONAL MATCH (t)-[:TEACHES]->(sub:Subject)
+                WITH t, collect(sub) AS subjects
+                RETURN t, subjects
+                """.trimIndent(),
+                mapOf("teacherId" to teacherId),
+            )
+            if (result.hasNext()) mapToTeacher(result.next()) else null
+        }
+
+    /**
+     * Maps a [Record] containing a `t` node and a `subjects` node list to a [Teacher].
+     * Returns null when the `t` column is null.
+     */
+    private fun mapToTeacher(record: Record): Teacher? =
+        record["t"].takeUnless { it.isNull }?.asNode()?.let { node ->
             Teacher(
-                fedUid    = fedUid,
-                name      = record[col(prefix, "name")].takeUnless { it.isNull }?.asString(),
-                email     = record[col(prefix, "email")].takeUnless { it.isNull }?.asString(),
-                tscNumber = record[col(prefix, "tscNumber")].takeUnless { it.isNull }?.asString(),
+                id                = node["id"].takeUnless { it.isNull }?.asString(),
+                name              = node["name"].takeUnless { it.isNull }?.asString(),
+                email             = node["email"].takeUnless { it.isNull }?.asString(),
+                phone             = node["phone"].takeUnless { it.isNull }?.asString(),
+                tscNumber         = node["tscNumber"].takeUnless { it.isNull }?.asString(),
+                maxPeriodsPerWeek = node["maxPeriodsPerWeek"].takeUnless { it.isNull }?.asInt(),
+                maxPeriodsPerDay  = node["maxPeriodsPerDay"].takeUnless { it.isNull }?.asInt(),
+                subjects          = record["subjects"].asList { subjectRepository.mapNodeToSubject(it.asNode()) },
             )
         }
 
     /**
-     * Maps a Neo4j [Node] (returned as a whole node via `RETURN t`) to a [Teacher].
-     * Returns null if `fedUid` is missing on the node.
+     * Maps a Neo4j [Node] (returned via `RETURN t` in stream join queries) to a [Teacher]
+     * without subjects. Returns null if the node's `id` is absent.
      */
     internal fun mapNodeToTeacher(node: Node): Teacher? =
-        node["fedUid"].takeUnless { it.isNull }?.asString()?.let { fedUid ->
+        node["id"].takeUnless { it.isNull }?.asString()?.let { id ->
             Teacher(
-                fedUid    = fedUid,
-                name      = node["name"].takeUnless { it.isNull }?.asString(),
-                email     = node["email"].takeUnless { it.isNull }?.asString(),
-                tscNumber = node["tscNumber"].takeUnless { it.isNull }?.asString(),
+                id                = id,
+                name              = node["name"].takeUnless { it.isNull }?.asString(),
+                email             = node["email"].takeUnless { it.isNull }?.asString(),
+                phone             = node["phone"].takeUnless { it.isNull }?.asString(),
+                tscNumber         = node["tscNumber"].takeUnless { it.isNull }?.asString(),
+                maxPeriodsPerWeek = node["maxPeriodsPerWeek"].takeUnless { it.isNull }?.asInt(),
+                maxPeriodsPerDay  = node["maxPeriodsPerDay"].takeUnless { it.isNull }?.asInt(),
             )
         }
-
-    /** Builds a column alias: empty prefix → `"fedUid"`, prefix `"teacher"` → `"teacherFedUid"`. */
-    private fun col(prefix: String, field: String) =
-        if (prefix.isEmpty()) field else prefix + field.replaceFirstChar { it.uppercase() }
 }

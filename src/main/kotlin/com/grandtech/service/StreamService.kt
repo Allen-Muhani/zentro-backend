@@ -54,8 +54,8 @@ class StreamService {
         if (homeRoomId != null && streamRepository.isRoomTaken(homeRoomId, excludeStreamId = stream.id))
             return ApiResponse(409, "Room is already assigned to another stream")
 
-        val teacherFedUid = stream.formTeacher?.fedUid
-        if (teacherFedUid != null && streamRepository.isTeacherTaken(teacherFedUid, excludeStreamId = stream.id))
+        val teacherId = stream.formTeacher?.id
+        if (teacherId != null && streamRepository.isTeacherTaken(teacherId, excludeStreamId = stream.id))
             return ApiResponse(409, "Teacher is already a form teacher for another stream")
 
         val streamId = if (stream.id == null) {
@@ -67,7 +67,7 @@ class StreamService {
         }
 
         homeRoomId?.let { streamRepository.replaceHomeRoom(streamId, it) }
-        teacherFedUid?.let { streamRepository.replaceFormTeacher(streamId, it) }
+        teacherId?.let { streamRepository.replaceFormTeacher(streamId, it) }
 
         val result = streamRepository.fetchStream(streamId)
             ?: return ApiResponse(404, "Stream not found")

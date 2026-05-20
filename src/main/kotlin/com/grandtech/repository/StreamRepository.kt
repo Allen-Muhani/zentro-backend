@@ -44,15 +44,15 @@ class StreamRepository {
      * Pass [excludeStreamId] when updating so the stream's own current teacher is not
      * treated as a conflict.
      */
-    fun isTeacherTaken(teacherFedUid: String, excludeStreamId: String? = null): Boolean =
+    fun isTeacherTaken(teacherId: String, excludeStreamId: String? = null): Boolean =
         driver.session().use { session ->
             session.run(
                 """
-                MATCH (st:Stream)-[:FORM_TEACHER]->(:Teacher {fedUid: ${'$'}fedUid})
+                MATCH (st:Stream)-[:FORM_TEACHER]->(:Teacher {id: ${'$'}teacherId})
                 WHERE ${'$'}excludeStreamId IS NULL OR st.id <> ${'$'}excludeStreamId
                 RETURN 1 LIMIT 1
                 """.trimIndent(),
-                mapOf("fedUid" to teacherFedUid, "excludeStreamId" to excludeStreamId),
+                mapOf("teacherId" to teacherId, "excludeStreamId" to excludeStreamId),
             ).hasNext()
         }
 
@@ -155,7 +155,7 @@ class StreamRepository {
      * Removes any existing `FORM_TEACHER` relationship from the stream and creates a new one
      * pointing to the teacher identified by [teacherFedUid].
      */
-    fun replaceFormTeacher(streamId: String, teacherFedUid: String) {
+    fun replaceFormTeacher(streamId: String, teacherId: String) {
         driver.session().use { session ->
             session.run(
                 """
@@ -164,10 +164,10 @@ class StreamRepository {
                 WITH st, collect(old) AS oldRels
                 FOREACH (r IN oldRels | DELETE r)
                 WITH st
-                MATCH (teacher:Teacher {fedUid: ${'$'}fedUid})
+                MATCH (teacher:Teacher {id: ${'$'}teacherId})
                 CREATE (st)-[:FORM_TEACHER]->(teacher)
                 """.trimIndent(),
-                mapOf("streamId" to streamId, "fedUid" to teacherFedUid),
+                mapOf("streamId" to streamId, "teacherId" to teacherId),
             )
         }
     }

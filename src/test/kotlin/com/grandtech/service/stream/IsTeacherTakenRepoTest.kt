@@ -16,52 +16,50 @@ class IsTeacherTakenRepoTest : StreamServiceTestBase() {
 
     @Test
     fun `isTeacherTaken returns false when teacher is not assigned to any stream`() {
-        trackTeacher("itt-teacher-1")
-        userRepository.saveTeacher(Teacher(fedUid = "itt-teacher-1", name = "Ms Wanjiku"))
+        trackSchool("itt-school-1")
+        userRepository.saveSchool(School(fedUid = "itt-school-1"))
+        val teacher = createTeacher("itt-school-1", "Ms Wanjiku", "wanjiku@itt.ke")
 
-        assertFalse(streamRepository.isTeacherTaken("itt-teacher-1"))
+        assertFalse(streamRepository.isTeacherTaken(teacher.id!!))
     }
 
     @Test
     fun `isTeacherTaken returns true when teacher is a form teacher for a stream`() {
         trackSchool("itt-school-2")
-        trackTeacher("itt-teacher-2")
         userRepository.saveSchool(School(fedUid = "itt-school-2"))
-        userRepository.saveTeacher(Teacher(fedUid = "itt-teacher-2", name = "Mr Otieno"))
+        val teacher = createTeacher("itt-school-2", "Mr Otieno", "otieno@itt.ke")
         upsertStream(
             "itt-school-2",
-            Stream(gradeLevel = 7, name = "Green", formTeacher = Teacher(fedUid = "itt-teacher-2")),
+            Stream(gradeLevel = 7, name = "Green", formTeacher = Teacher(id = teacher.id)),
         )
 
-        assertTrue(streamRepository.isTeacherTaken("itt-teacher-2"))
+        assertTrue(streamRepository.isTeacherTaken(teacher.id!!))
     }
 
     @Test
     fun `isTeacherTaken returns false when the only assignment belongs to the excluded stream`() {
         trackSchool("itt-school-3")
-        trackTeacher("itt-teacher-3")
         userRepository.saveSchool(School(fedUid = "itt-school-3"))
-        userRepository.saveTeacher(Teacher(fedUid = "itt-teacher-3", name = "Ms Achieng"))
+        val teacher = createTeacher("itt-school-3", "Ms Achieng", "achieng@itt.ke")
         val stream = upsertStream(
             "itt-school-3",
-            Stream(gradeLevel = 9, name = "Yellow", formTeacher = Teacher(fedUid = "itt-teacher-3")),
+            Stream(gradeLevel = 9, name = "Yellow", formTeacher = Teacher(id = teacher.id)),
         )
 
-        assertFalse(streamRepository.isTeacherTaken("itt-teacher-3", excludeStreamId = stream.id))
+        assertFalse(streamRepository.isTeacherTaken(teacher.id!!, excludeStreamId = stream.id))
     }
 
     @Test
     fun `isTeacherTaken returns true when teacher is taken by a different stream even with excludeStreamId`() {
         trackSchool("itt-school-4")
-        trackTeacher("itt-teacher-4")
         userRepository.saveSchool(School(fedUid = "itt-school-4"))
-        userRepository.saveTeacher(Teacher(fedUid = "itt-teacher-4", name = "Mr Kamau"))
+        val teacher = createTeacher("itt-school-4", "Mr Kamau", "kamau@itt.ke")
         upsertStream(
             "itt-school-4",
-            Stream(gradeLevel = 7, name = "Blue", formTeacher = Teacher(fedUid = "itt-teacher-4")),
+            Stream(gradeLevel = 7, name = "Blue", formTeacher = Teacher(id = teacher.id)),
         )
         val otherStream = upsertStream("itt-school-4", Stream(gradeLevel = 8, name = "Red"))
 
-        assertTrue(streamRepository.isTeacherTaken("itt-teacher-4", excludeStreamId = otherStream.id))
+        assertTrue(streamRepository.isTeacherTaken(teacher.id!!, excludeStreamId = otherStream.id))
     }
 }

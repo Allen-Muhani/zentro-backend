@@ -1,8 +1,11 @@
 package com.grandtech.service.stream
 
 import com.grandtech.model.Stream
+import com.grandtech.model.Teacher
 import com.grandtech.repository.StreamRepository
+import com.grandtech.repository.TeacherRepository
 import com.grandtech.repository.UserRepository
+import com.grandtech.service.CbcDataSeeder
 import com.grandtech.service.RoomService
 import com.grandtech.service.StreamService
 import io.quarkus.test.junit.QuarkusTest
@@ -33,20 +36,29 @@ abstract class StreamServiceTestBase {
     lateinit var userRepository: UserRepository
 
     @Inject
+    lateinit var teacherRepository: TeacherRepository
+
+    @Inject
     lateinit var driver: Driver
 
     private val trackedSchoolUids = mutableSetOf<String>()
-    private val trackedTeacherUids = mutableSetOf<String>()
 
-    /** Registers school UIDs so [cleanUp] deletes them along with their rooms and streams. */
+    /** Registers school UIDs so [cleanUp] deletes them along with their rooms, streams and teachers. */
     protected fun trackSchool(vararg uids: String) {
         trackedSchoolUids.addAll(uids.toList())
     }
 
-    /** Registers teacher UIDs so [cleanUp] deletes their nodes after the test. */
-    protected fun trackTeacher(vararg uids: String) {
-        trackedTeacherUids.addAll(uids.toList())
-    }
+    /**
+     * Creates a teacher linked to [schoolFedUid] with one seeded subject.
+     * Throws if the school does not exist.
+     */
+    protected fun createTeacher(schoolFedUid: String, name: String, email: String): Teacher =
+        checkNotNull(
+            teacherRepository.createTeacher(
+                schoolFedUid,
+                Teacher(name = name, email = email, subjectIds = listOf(CbcDataSeeder.SUBJECTS.first().id)),
+            ),
+        ) { "Failed to create teacher for school $schoolFedUid" }
 
     /**
      * Calls [StreamService.upsertStream] and returns the stream payload from a 200 response.
@@ -63,26 +75,20 @@ abstract class StreamServiceTestBase {
 
     @AfterEach
     fun cleanUp() {
-        driver.session().use { session ->
-            if (trackedSchoolUids.isNotEmpty()) {
+        if (trackedSchoolUids.isNotEmpty()) {
+            driver.session().use { session ->
                 session.run(
                     """
                     MATCH (s:School) WHERE s.fedUid IN ${'$'}uids
                     OPTIONAL MATCH (s)-[:HAS_ROOM]->(r:Room)
                     OPTIONAL MATCH (s)-[:HAS_STREAM]->(st:Stream)
-                    DETACH DELETE s, r, st
+                    OPTIONAL MATCH (s)-[:HAS_TEACHER]->(t:Teacher)
+                    DETACH DELETE s, r, st, t
                     """.trimIndent(),
                     mapOf("uids" to trackedSchoolUids.toList()),
                 )
-                trackedSchoolUids.clear()
             }
-            if (trackedTeacherUids.isNotEmpty()) {
-                session.run(
-                    "MATCH (t:Teacher) WHERE t.fedUid IN \$uids DETACH DELETE t",
-                    mapOf("uids" to trackedTeacherUids.toList()),
-                )
-                trackedTeacherUids.clear()
-            }
+            trackedSchoolUids.clear()
         }
     }
 }

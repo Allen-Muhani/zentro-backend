@@ -94,19 +94,18 @@ class UpsertStreamCreateTest : StreamServiceTestBase() {
     @Test
     fun `upsertStream creates FORM_TEACHER relationship and returns full teacher`() {
         trackSchool("usc-school-6")
-        trackTeacher("usc-teacher-6")
         userRepository.saveSchool(School(fedUid = "usc-school-6"))
-        userRepository.saveTeacher(Teacher(fedUid = "usc-teacher-6", name = "Ms Njeri", email = "njeri@school.ke"))
+        val teacher = createTeacher("usc-school-6", "Ms Njeri", "njeri@usc.ke")
 
         val stream = upsertStream(
             "usc-school-6",
-            Stream(gradeLevel = 8, name = "Blue", formTeacher = Teacher(fedUid = "usc-teacher-6")),
+            Stream(gradeLevel = 8, name = "Blue", formTeacher = Teacher(id = teacher.id)),
         )
 
         assertNotNull(stream.formTeacher)
-        assertEquals("usc-teacher-6", stream.formTeacher?.fedUid)
+        assertEquals(teacher.id, stream.formTeacher?.id)
         assertEquals("Ms Njeri", stream.formTeacher?.name)
-        assertEquals("njeri@school.ke", stream.formTeacher?.email)
+        assertEquals("njeri@usc.ke", stream.formTeacher?.email)
     }
 
     @Test
