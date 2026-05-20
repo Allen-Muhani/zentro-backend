@@ -3,6 +3,7 @@ package com.grandtech.service
 import com.grandtech.model.RoomCapabilityTag
 import com.grandtech.model.Subject
 import com.grandtech.model.SubjectType
+import com.grandtech.repository.SubjectRepository
 import io.quarkus.runtime.StartupEvent
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.enterprise.event.Observes

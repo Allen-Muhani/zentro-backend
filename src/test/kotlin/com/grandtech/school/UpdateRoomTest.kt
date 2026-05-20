@@ -3,10 +3,10 @@ package com.grandtech.school
 import com.grandtech.model.Room
 import com.grandtech.model.RoomCapabilityTag
 import com.grandtech.model.School
-import com.grandtech.service.FirebaseAuthService
+import com.grandtech.auth.FirebaseAuthService
 import com.grandtech.service.RoomService
 import com.grandtech.service.SchoolService
-import com.grandtech.service.UserRepository
+import com.grandtech.repository.UserRepository
 import io.quarkus.test.InjectMock
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured.given

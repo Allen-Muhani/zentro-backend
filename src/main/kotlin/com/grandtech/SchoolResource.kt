@@ -4,7 +4,7 @@ import com.grandtech.auth.Authenticated
 import com.grandtech.model.School
 import com.grandtech.model.Subject
 import com.grandtech.service.SchoolService
-import com.grandtech.service.SubjectRepository
+import com.grandtech.repository.SubjectRepository
 import com.grandtech.utils.ApiResponse
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes

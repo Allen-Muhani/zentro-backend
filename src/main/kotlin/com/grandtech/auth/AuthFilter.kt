@@ -1,8 +1,7 @@
 package com.grandtech.auth
 
 import com.google.firebase.auth.FirebaseAuthException
-import com.grandtech.service.FirebaseAuthService
-import com.grandtech.service.UserRepository
+import com.grandtech.repository.UserRepository
 import com.grandtech.utils.ApiResponse
 import jakarta.annotation.Priority
 import jakarta.inject.Inject

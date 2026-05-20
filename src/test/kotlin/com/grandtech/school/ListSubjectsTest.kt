@@ -1,7 +1,7 @@
 package com.grandtech.school
 
 import com.grandtech.service.CbcDataSeeder
-import com.grandtech.service.SubjectRepository
+import com.grandtech.repository.SubjectRepository
 import io.quarkus.test.InjectMock
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured.given

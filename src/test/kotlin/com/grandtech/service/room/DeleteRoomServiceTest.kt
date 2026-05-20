@@ -29,7 +29,7 @@ class DeleteRoomServiceTest : RoomServiceTestBase() {
         val exists = driver.session().use { session ->
             session.run(
                 "MATCH (r:Room {id: \$id}) RETURN count(r) > 0 AS exists",
-                mapOf("id" to room.id!!),
+                mapOf("id" to room.id),
             ).single()["exists"].asBoolean()
         }
         assertFalse(exists)
@@ -52,7 +52,7 @@ class DeleteRoomServiceTest : RoomServiceTestBase() {
                 MATCH (s:School {fedUid: ${'$'}fedUid})-[:HAS_ROOM]->(r:Room {id: ${'$'}roomId})
                 RETURN count(r) > 0 AS exists
                 """.trimIndent(),
-                mapOf("fedUid" to "dr-school-2", "roomId" to room.id!!),
+                mapOf("fedUid" to "dr-school-2", "roomId" to room.id),
             ).single()["exists"].asBoolean()
         }
         assertFalse(relationshipExists)

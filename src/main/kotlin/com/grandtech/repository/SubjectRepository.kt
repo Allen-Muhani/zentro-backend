@@ -1,4 +1,4 @@
-package com.grandtech.service
+package com.grandtech.repository
 
 import com.grandtech.model.RoomCapabilityTag
 import com.grandtech.model.Subject
