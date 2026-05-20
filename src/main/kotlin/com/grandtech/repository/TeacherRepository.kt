@@ -28,6 +28,71 @@ class TeacherRepository {
             ).single()["exists"].asBoolean()
         }
 
+    /** Returns true if a teacher OTHER than [excludeTeacherId] already has [email]. */
+    fun existsByEmailExcluding(email: String, excludeTeacherId: String): Boolean =
+        driver.session().use { session ->
+            session.run(
+                "MATCH (t:Teacher {email: \$email}) WHERE t.id <> \$excludeId RETURN count(t) > 0 AS exists",
+                mapOf("email" to email, "excludeId" to excludeTeacherId),
+            ).single()["exists"].asBoolean()
+        }
+
+    /**
+     * Updates scalar fields on the teacher identified by [teacher.id], scoped to [schoolFedUid]
+     * so a school cannot update another school's teacher. Only non-null fields in [teacher] are
+     * written; existing values are kept via COALESCE.
+     *
+     * If [teacher.subjectIds] is non-null the TEACHES relationships are fully replaced.
+     * Returns the updated teacher with subjects, or null if the teacher/school pair is not found.
+     */
+    fun updateTeacher(schoolFedUid: String, teacher: Teacher): Teacher? {
+        val teacherId = driver.session().use { session ->
+            val result = session.run(
+                """
+                MATCH (:School {fedUid: ${'$'}fedUid})-[:HAS_TEACHER]->(t:Teacher {id: ${'$'}id})
+                SET t.name              = COALESCE(${'$'}name,              t.name),
+                    t.email             = COALESCE(${'$'}email,             t.email),
+                    t.phone             = COALESCE(${'$'}phone,             t.phone),
+                    t.tscNumber         = COALESCE(${'$'}tscNumber,         t.tscNumber),
+                    t.maxPeriodsPerWeek = COALESCE(${'$'}maxPeriodsPerWeek, t.maxPeriodsPerWeek),
+                    t.maxPeriodsPerDay  = COALESCE(${'$'}maxPeriodsPerDay,  t.maxPeriodsPerDay)
+                RETURN t.id AS id
+                """.trimIndent(),
+                mapOf(
+                    "fedUid"            to schoolFedUid,
+                    "id"                to teacher.id,
+                    "name"              to teacher.name,
+                    "email"             to teacher.email,
+                    "phone"             to teacher.phone,
+                    "tscNumber"         to teacher.tscNumber,
+                    "maxPeriodsPerWeek" to teacher.maxPeriodsPerWeek,
+                    "maxPeriodsPerDay"  to teacher.maxPeriodsPerDay,
+                ),
+            )
+            if (result.hasNext()) result.next()["id"].asString() else null
+        } ?: return null
+
+        val subjectIds = teacher.subjectIds
+        if (subjectIds != null) {
+            driver.session().use { session ->
+                session.run(
+                    """
+                    MATCH (t:Teacher {id: ${'$'}teacherId})
+                    OPTIONAL MATCH (t)-[r:TEACHES]->()
+                    DELETE r
+                    WITH t
+                    UNWIND ${'$'}subjectIds AS subjectId
+                    MATCH (sub:Subject {id: subjectId})
+                    CREATE (t)-[:TEACHES]->(sub)
+                    """.trimIndent(),
+                    mapOf("teacherId" to teacherId, "subjectIds" to subjectIds),
+                )
+            }
+        }
+
+        return fetchTeacher(teacherId)
+    }
+
     /**
      * Creates a `(:Teacher)` node linked to the school via `HAS_TEACHER`, then links
      * it to each subject in [Teacher.subjectIds] via `TEACHES`.
