@@ -75,6 +75,16 @@ class StreamService {
     }
 
     /**
+     * Deletes the stream identified by [streamId] that belongs to [schoolFedUid].
+     * Returns 200 on success or 404 when no matching stream exists under this school.
+     */
+    fun deleteStream(schoolFedUid: String, streamId: String): ApiResponse<Nothing> =
+        if (streamRepository.deleteStream(schoolFedUid, streamId))
+            ApiResponse(200, "Stream deleted", null)
+        else
+            ApiResponse(404, "Stream not found", null)
+
+    /**
      * Returns all streams belonging to [schoolFedUid], each with its optional
      * `HOME_ROOM` and `FORM_TEACHER` relationships, ordered by grade level then name.
      * Returns a 200 with an empty list when the school has no streams.

@@ -115,6 +115,22 @@ class StreamRepository {
         }
 
     /**
+     * Deletes the stream with [streamId] owned by [schoolFedUid] via `DETACH DELETE`.
+     * Returns false if no matching stream was found under this school.
+     */
+    fun deleteStream(schoolFedUid: String, streamId: String): Boolean =
+        driver.session().use { session ->
+            val result = session.run(
+                """
+                MATCH (:School {fedUid: ${'$'}fedUid})-[:HAS_STREAM]->(st:Stream {id: ${'$'}streamId})
+                DETACH DELETE st
+                """.trimIndent(),
+                mapOf("fedUid" to schoolFedUid, "streamId" to streamId),
+            )
+            result.consume().counters().nodesDeleted() > 0
+        }
+
+    /**
      * Removes any existing `HOME_ROOM` relationship from the stream and creates a new one
      * pointing to the room identified by [roomId].
      */
