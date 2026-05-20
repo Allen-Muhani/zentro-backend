@@ -1,4 +1,4 @@
-package com.grandtech.service
+package com.grandtech.repository
 
 import com.grandtech.model.School
 import com.grandtech.model.Teacher
@@ -21,6 +21,10 @@ class UserRepository {
     /** Neo4j driver injected by Quarkus CDI; manages connection pooling and sessions. */
     @Inject
     lateinit var driver: Driver
+
+    /** Handles persistence and lookup operations specific to [com.grandtech.model.Teacher] nodes. */
+    @Inject
+    lateinit var teacherRepository: TeacherRepository
 
     /**
      * Looks up a user by their Firebase UID and returns the typed model, or null.
@@ -59,12 +63,7 @@ class UserRepository {
      * @return true if a Teacher node with that email exists, false otherwise
      */
     fun teacherExistsByEmail(email: String): Boolean =
-        driver.session().use { session ->
-            session.run(
-                "MATCH (t:Teacher {email: \$email}) RETURN count(t) > 0 AS exists",
-                mapOf("email" to email),
-            ).single()["exists"].asBoolean()
-        }
+        teacherRepository.teacherExistsByEmail(email)
 
     /**
      * Returns true if a `School` node with the given email already exists.
@@ -84,7 +83,7 @@ class UserRepository {
      * Returns true if a `User` node with the given email already exists.
      *
      * @param email the email address to check
-     * @return true if a School node with that email exists, false otherwise
+     * @return true if a User node with that email exists, false otherwise
      */
     fun userExistsByEmail(email: String): Boolean =
         driver.session().use { session ->
@@ -94,28 +93,14 @@ class UserRepository {
             ).single()["exists"].asBoolean()
         }
 
-
     /**
      * Creates a new `(:User:Teacher)` node and returns the persisted model.
      *
      * @param teacher the teacher to persist; its [Teacher.fedUid] must be unique
      * @return the same [Teacher] instance passed in
      */
-    fun saveTeacher(teacher: Teacher): Teacher {
-        driver.session().use { session ->
-            session.run(
-                "CREATE (:User:Teacher {fedUid: \$fedUid, name: \$name, " +
-                    "email: \$email, tscNumber: \$tscNumber})",
-                mapOf(
-                    "fedUid" to teacher.fedUid,
-                    "name" to teacher.name,
-                    "email" to teacher.email,
-                    "tscNumber" to teacher.tscNumber,
-                ),
-            )
-        }
-        return teacher
-    }
+    fun saveTeacher(teacher: Teacher): Teacher =
+        teacherRepository.saveTeacher(teacher)
 
     /**
      * Creates a new `(:User:School)` node and returns the persisted model.

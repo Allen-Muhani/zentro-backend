@@ -1,9 +1,11 @@
 package com.grandtech.service
 
 import com.google.firebase.auth.FirebaseAuthException
+import com.grandtech.auth.FirebaseAuthService
 import com.grandtech.model.School
 import com.grandtech.model.Teacher
 import com.grandtech.model.User
+import com.grandtech.repository.UserRepository
 import com.grandtech.utils.ApiResponse
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject

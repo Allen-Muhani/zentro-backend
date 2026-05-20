@@ -1,8 +1,8 @@
 package com.grandtech.service.school
 
 import com.grandtech.model.School
+import com.grandtech.repository.UserRepository
 import com.grandtech.service.SchoolService
-import com.grandtech.service.UserRepository
 import io.quarkus.test.junit.QuarkusTest
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach

@@ -1,7 +1,7 @@
 package com.grandtech.service.room
 
+import com.grandtech.repository.UserRepository
 import com.grandtech.service.RoomService
-import com.grandtech.service.UserRepository
 import io.quarkus.test.junit.QuarkusTest
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
