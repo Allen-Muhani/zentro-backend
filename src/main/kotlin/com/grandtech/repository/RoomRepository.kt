@@ -6,6 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import org.neo4j.driver.Driver
 import org.neo4j.driver.Record
+import org.neo4j.driver.types.Node
 
 /** Executes all Neo4j read and write operations specific to [Room] nodes. */
 @ApplicationScoped
@@ -133,6 +134,20 @@ class RoomRepository {
                 isStandardClassroom = record[col(prefix, "isStandardClassroom")].takeUnless { it.isNull }?.asBoolean(),
             )
         }
+
+    /**
+     * Maps a Neo4j [Node] (returned as a whole node via `RETURN r`) to a [Room].
+     * Returns null when [node] is null, which indicates no `HOME_ROOM` relationship existed.
+     */
+    internal fun mapNodeToRoom(node: Node): Room =
+        Room(
+            id                  = node["id"].takeUnless { it.isNull }?.asString(),
+            name                = node["name"].takeUnless { it.isNull }?.asString(),
+            capacity            = node["capacity"].takeUnless { it.isNull }?.asInt(),
+            capabilityTag       = node["capabilityTag"].takeUnless { it.isNull }
+                                    ?.asString()?.let { RoomCapabilityTag.valueOf(it) },
+            isStandardClassroom = node["isStandardClassroom"].takeUnless { it.isNull }?.asBoolean(),
+        )
 
     /** Builds a column alias: empty prefix → `"id"`, prefix `"room"` → `"roomId"`. */
     private fun col(prefix: String, field: String) =

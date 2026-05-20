@@ -157,6 +157,27 @@ class StreamRepository {
     }
 
     /**
+     * Returns all streams belonging to [schoolFedUid] with their optional
+     * `HOME_ROOM` and `FORM_TEACHER` relationships, ordered by grade level then name.
+     * Returns an empty list when the school has no streams.
+     */
+    fun listStreams(schoolFedUid: String): List<Stream> =
+        driver.session().use { session ->
+            session.run(
+                """
+                MATCH (:School {fedUid: ${'$'}fedUid})-[:HAS_STREAM]->(st:Stream)
+                OPTIONAL MATCH (st)-[:HOME_ROOM]->(r:Room)
+                OPTIONAL MATCH (st)-[:FORM_TEACHER]->(t:Teacher)
+                RETURN st.id AS id, st.gradeLevel AS gradeLevel, st.name AS name,
+                       st.studentCount AS studentCount, st.reStrand AS reStrand,
+                       r, t
+                ORDER BY st.gradeLevel, st.name
+                """.trimIndent(),
+                mapOf("fedUid" to schoolFedUid),
+            ).list { mapToStream(it) }
+        }
+
+    /**
      * Fetches the stream identified by [streamId] together with its optional
      * `HOME_ROOM` and `FORM_TEACHER` relationships. Returns null if not found.
      */
@@ -169,11 +190,7 @@ class StreamRepository {
                 OPTIONAL MATCH (st)-[:FORM_TEACHER]->(t:Teacher)
                 RETURN st.id AS id, st.gradeLevel AS gradeLevel, st.name AS name,
                        st.studentCount AS studentCount, st.reStrand AS reStrand,
-                       r.id AS roomId, r.name AS roomName, r.capacity AS roomCapacity,
-                       r.capabilityTag AS roomCapabilityTag,
-                       r.isStandardClassroom AS roomIsStandardClassroom,
-                       t.fedUid AS teacherFedUid, t.name AS teacherName,
-                       t.email AS teacherEmail, t.tscNumber AS teacherTscNumber
+                       r, t
                 """.trimIndent(),
                 mapOf("streamId" to streamId),
             )
@@ -183,16 +200,10 @@ class StreamRepository {
     /**
      * Maps a Neo4j [Record] row returned by a stream query to a [Stream] domain object.
      *
-     * Scalar stream fields (`id`, `gradeLevel`, `name`, `studentCount`, `reStrand`) are
-     * read directly from the record. The two optional relationships are reconstructed from
-     * flattened columns:
-     * - `roomId`, `roomName`, `roomCapacity`, `roomCapabilityTag`, `roomIsStandardClassroom`
-     *   → [Stream.homeRoom]; null when no `HOME_ROOM` relationship exists.
-     * - `teacherFedUid`, `teacherName`, `teacherEmail`, `teacherTscNumber`
-     *   → [Stream.formTeacher]; null when no `FORM_TEACHER` relationship exists.
-     *
-     * `takeUnless { it.isNull }` guards every field so that a Neo4j null value becomes a
-     * Kotlin null rather than throwing a type-conversion exception.
+     * Scalar stream fields (`id`, `gradeLevel`, `name`, `studentCount`, `reStrand`) are read
+     * directly from the record. Optional relationships are returned as whole nodes (`r`, `t`)
+     * and delegated to [RoomRepository.mapNodeToRoom] and [TeacherRepository.mapNodeToTeacher].
+     * Both resolve to null when no `HOME_ROOM` / `FORM_TEACHER` relationship exists.
      */
     private fun mapToStream(record: Record) = Stream(
         id           = record["id"].takeUnless { it.isNull }?.asString(),
@@ -200,7 +211,7 @@ class StreamRepository {
         name         = record["name"].takeUnless { it.isNull }?.asString(),
         studentCount = record["studentCount"].takeUnless { it.isNull }?.asInt(),
         reStrand     = record["reStrand"].takeUnless { it.isNull }?.asString(),
-        homeRoom     = roomRepository.mapToRoom(record, prefix = "room"),
-        formTeacher  = teacherRepository.mapToTeacher(record, prefix = "teacher"),
+        homeRoom     = record["r"].takeUnless { it.isNull }?.asNode()?.let { roomRepository.mapNodeToRoom(it) },
+        formTeacher  = record["t"].takeUnless { it.isNull }?.asNode()?.let { teacherRepository.mapNodeToTeacher(it) },
     )
 }
