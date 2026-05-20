@@ -83,6 +83,16 @@ class TeacherService {
     }
 
     /**
+     * Deletes the teacher identified by [teacherId] that belongs to [schoolFedUid].
+     * Returns 200 on success or 404 when no matching teacher exists under this school.
+     */
+    fun deleteTeacher(schoolFedUid: String, teacherId: String): ApiResponse<Nothing> =
+        if (teacherRepository.deleteTeacher(schoolFedUid, teacherId))
+            ApiResponse(200, "Teacher deleted", null)
+        else
+            ApiResponse(404, "Teacher not found", null)
+
+    /**
      * Returns all teachers belonging to [schoolFedUid], each with their subjects.
      * Returns 200 with an empty list when the school has no teachers.
      */
