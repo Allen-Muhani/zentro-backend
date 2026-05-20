@@ -8,6 +8,7 @@ import com.grandtech.utils.ApiResponse
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
+import jakarta.ws.rs.PATCH
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -46,6 +47,28 @@ class TeacherResource {
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)
         return teacherService.createTeacher(fedUid, teacher)
+    }
+
+    /**
+     * Updates an existing teacher's details for the authenticated school.
+     *
+     * Supply the teacher's [Teacher.id] plus any fields to change. Omitted fields
+     * keep their current values. If [Teacher.subjectIds] is included it fully replaces
+     * the current subject assignments (1–2 entries required).
+     */
+    @PATCH
+    @Path("/update")
+    @Authenticated
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    fun updateTeacher(
+        @Context requestContext: ContainerRequestContext,
+        teacher: Teacher,
+    ): ApiResponse<Teacher> {
+        val fedUid = requestContext.getProperty("fedUid") as String
+        schoolService.getSchoolByFedUid(fedUid)
+            ?: return ApiResponse(403, "Forbidden: account is not a school", null)
+        return teacherService.updateTeacher(fedUid, teacher)
     }
 
     /**
