@@ -1,0 +1,20 @@
+app = 'zentro-backend'
+primary_region = 'jnb'  # Johannesburg - closest to Nairobi
+
+[build]
+dockerfile = 'src/main/docker/Dockerfile.jvm'
+
+[env]
+FIREBASE_CREDENTIALS_PATH = '/deployments/config/firebase-credentials.json'
+QUARKUS_HTTP_PORT = '8080'
+
+[http_service]
+internal_port = 8080
+force_https = true
+auto_stop_machines = 'stop'
+auto_start_machines = true
+min_machines_running = 0
+
+[[vm]]
+memory = '256mb'
+cpus = 1
