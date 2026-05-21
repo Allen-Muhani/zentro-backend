@@ -22,6 +22,9 @@ jobs:
       - name: Build jar
         run: ./mvnw package -DskipTests -B
 
+      - name: Write Firebase credentials
+        run: echo '${{ secrets.FIREBASE_CREDENTIALS_JSON }}' > src/main/resources/zentro-fb00d-firebase-adminsdk-fbsvc-a4e70b2234.json
+
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy
