@@ -3,3 +3,4 @@
 !target/*-runner.jar
 !target/lib/*
 !target/quarkus-app/*
+!src/main/resources/zentro-fb00d-firebase-adminsdk-fbsvc-a4e70b2234.json

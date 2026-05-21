@@ -91,10 +91,16 @@ COPY --chown=185 target/quarkus-app/*.jar /deployments/
 COPY --chown=185 target/quarkus-app/app/ /deployments/app/
 COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
 
+# Firebase service-account key. Override FIREBASE_CREDENTIALS_PATH at runtime
+# to mount a different key without rebuilding the image.
+COPY --chown=185 src/main/resources/zentro-fb00d-firebase-adminsdk-fbsvc-a4e70b2234.json \
+     /deployments/config/firebase-credentials.json
+
 EXPOSE 8080
 USER 185
 ENV JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
+ENV FIREBASE_CREDENTIALS_PATH="/deployments/config/firebase-credentials.json"
 
 ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
 
