@@ -24,7 +24,9 @@ jobs:
         run: ./mvnw package -DskipTests -B
 
       - name: Install flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          echo "$HOME/.fly/bin" >> $GITHUB_PATH
 
       - name: Authenticate Docker with fly.io registry
         run: fly auth docker
