@@ -22,10 +22,10 @@ jobs:
       - name: Build jar
         run: ./mvnw package -DskipTests -B
 
-#      - name: Write Firebase credentials
-#        env:
-#          FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
-#        run: echo "$FIREBASE_CREDENTIALS_JSON" > src/main/resources/zentro-fb00d-firebase-adminsdk-fbsvc-a4e70b2234.json
+      - name: Write Firebase credentials
+        env:
+          FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
+        run: echo "$FIREBASE_CREDENTIALS_JSON" > src/main/resources/zentro-fb00d-firebase-adminsdk-fbsvc-a4e70b2234.json
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
