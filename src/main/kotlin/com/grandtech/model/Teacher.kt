@@ -13,8 +13,7 @@ package com.grandtech.model
  * @property tscNumber         Teachers Service Commission registration number (optional)
  * @property maxPeriodsPerWeek upper bound on weekly lessons; defaults to 23
  * @property maxPeriodsPerDay  upper bound on daily lessons; defaults to 6
- * @property subjectIds        subject IDs supplied on create (1–2); ignored on read
- * @property subjects          full subject objects returned on read; null on create
+ * @property subjectIds        subject IDs — supplied on create/update (1–2 entries); returned on all read responses
  */
 data class Teacher(
     val id: String? = null,
@@ -25,5 +24,4 @@ data class Teacher(
     val maxPeriodsPerWeek: Int? = null,
     val maxPeriodsPerDay: Int? = null,
     val subjectIds: List<String>? = null,
-    val subjects: List<Subject>? = null,
 )

@@ -200,7 +200,7 @@ class ListTeachersTest {
     }
 
     @Test
-    fun `returns teacher with their subjects`() {
+    fun `returns teacher with their subject ids`() {
         trackSchool("ltt-school-4")
         userRepository.saveSchool(School(fedUid = "ltt-school-4"))
         teacherRepository.createTeacher(
@@ -214,8 +214,8 @@ class ListTeachersTest {
             .`when`().get("/school/teacher/list")
             .then()
                 .statusCode(200)
-                .body("payload[0].subjects.size()", `is`(2))
-                .body("payload[0].subjects[0].id",  notNullValue())
+                .body("payload[0].subjectIds.size()", `is`(2))
+                .body("payload[0].subjectIds[0]",     notNullValue())
     }
 
     @Test

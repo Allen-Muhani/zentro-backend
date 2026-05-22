@@ -15,10 +15,6 @@ class TeacherRepository {
     @Inject
     lateinit var driver: Driver
 
-    /** Used to map subject nodes returned from join queries. */
-    @Inject
-    lateinit var subjectRepository: SubjectRepository
-
     /** Returns true if any `(:Teacher)` node already has the given email. */
     fun existsByEmail(email: String): Boolean =
         driver.session().use { session ->
@@ -165,7 +161,7 @@ class TeacherRepository {
         }
 
     /**
-     * Returns all teachers belonging to [schoolFedUid] with their subjects, ordered by name.
+     * Returns all teachers belonging to [schoolFedUid] with their subject IDs, ordered by name.
      * Returns an empty list when the school has no teachers.
      */
     fun listTeachers(schoolFedUid: String): List<Teacher> =
@@ -174,8 +170,8 @@ class TeacherRepository {
                 """
                 MATCH (:School {fedUid: ${'$'}fedUid})-[:HAS_TEACHER]->(t:Teacher)
                 OPTIONAL MATCH (t)-[:TEACHES]->(sub:Subject)
-                WITH t, collect(sub) AS subjects
-                RETURN t, subjects
+                WITH t, collect(sub.id) AS subjectIds
+                RETURN t, subjectIds
                 ORDER BY t.name
                 """.trimIndent(),
                 mapOf("fedUid" to schoolFedUid),
@@ -183,7 +179,7 @@ class TeacherRepository {
         }
 
     /**
-     * Fetches a single teacher by [teacherId] with their subjects. Returns null if not found.
+     * Fetches a single teacher by [teacherId] with their subject IDs. Returns null if not found.
      */
     fun fetchTeacher(teacherId: String): Teacher? =
         driver.session().use { session ->
@@ -191,8 +187,8 @@ class TeacherRepository {
                 """
                 MATCH (t:Teacher {id: ${'$'}teacherId})
                 OPTIONAL MATCH (t)-[:TEACHES]->(sub:Subject)
-                WITH t, collect(sub) AS subjects
-                RETURN t, subjects
+                WITH t, collect(sub.id) AS subjectIds
+                RETURN t, subjectIds
                 """.trimIndent(),
                 mapOf("teacherId" to teacherId),
             )
@@ -200,7 +196,7 @@ class TeacherRepository {
         }
 
     /**
-     * Maps a [Record] containing a `t` node and a `subjects` node list to a [Teacher].
+     * Maps a [Record] containing a `t` node and a `subjectIds` list to a [Teacher].
      * Returns null when the `t` column is null.
      */
     private fun mapToTeacher(record: Record): Teacher? =
@@ -213,7 +209,7 @@ class TeacherRepository {
                 tscNumber         = node["tscNumber"].takeUnless { it.isNull }?.asString(),
                 maxPeriodsPerWeek = node["maxPeriodsPerWeek"].takeUnless { it.isNull }?.asInt(),
                 maxPeriodsPerDay  = node["maxPeriodsPerDay"].takeUnless { it.isNull }?.asInt(),
-                subjects          = record["subjects"].asList { subjectRepository.mapNodeToSubject(it.asNode()) },
+                subjectIds        = record["subjectIds"].asList { it.asString() },
             )
         }
 

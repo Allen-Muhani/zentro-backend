@@ -14,7 +14,6 @@ import io.restassured.RestAssured.given
 import io.restassured.http.ContentType
 import jakarta.inject.Inject
 import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -331,9 +330,8 @@ class UpdateTeacherTest {
             .then()
                 .statusCode(200)
                 .body("status",                   `is`(200))
-                .body("payload.subjects.size()",  `is`(1))
-                .body("payload.subjects[0].id",   `is`(subjectId2))
-                .body("payload.subjects[0].id",   notNullValue())
+                .body("payload.subjectIds.size()", `is`(1))
+                .body("payload.subjectIds[0]",    `is`(subjectId2))
     }
 
     @Test
@@ -355,6 +353,6 @@ class UpdateTeacherTest {
             .`when`().patch("/school/teacher/update")
             .then()
                 .statusCode(200)
-                .body("payload.subjects.size()", `is`(2))
+                .body("payload.subjectIds.size()", `is`(2))
     }
 }

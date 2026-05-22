@@ -130,7 +130,7 @@ class TeacherRepoTest : TeacherServiceTestBase() {
     }
 
     @Test
-    fun `createTeacher returns full subject objects in payload`() {
+    fun `createTeacher returns subjectIds in payload`() {
         trackSchool("tr-school-6")
         saveSchool("tr-school-6")
 
@@ -139,9 +139,8 @@ class TeacherRepoTest : TeacherServiceTestBase() {
             Teacher(name = "Mr Mwangi", email = "mwangi@tr.ke", subjectIds = listOf(subjectId1)),
         )!!
 
-        assertEquals(1, teacher.subjects?.size)
-        assertEquals(subjectId1, teacher.subjects?.first()?.id)
-        assertNotNull(teacher.subjects?.first()?.name)
+        assertEquals(1, teacher.subjectIds?.size)
+        assertEquals(subjectId1, teacher.subjectIds?.first())
     }
 
     // ── existsByEmail ─────────────────────────────────────────────────────────
@@ -184,7 +183,7 @@ class TeacherRepoTest : TeacherServiceTestBase() {
         assertNotNull(fetched)
         assertEquals(created.id, fetched!!.id)
         assertEquals("Ms Odhiambo", fetched.name)
-        assertEquals(1, fetched.subjects?.size)
+        assertEquals(1, fetched.subjectIds?.size)
     }
 
     // ── listTeachers ──────────────────────────────────────────────────────────
@@ -234,7 +233,7 @@ class TeacherRepoTest : TeacherServiceTestBase() {
     }
 
     @Test
-    fun `listTeachers hydrates subjects for each teacher`() {
+    fun `listTeachers populates subjectIds for each teacher`() {
         trackSchool("tr-school-13")
         saveSchool("tr-school-13")
         teacherRepository.createTeacher(
@@ -244,6 +243,6 @@ class TeacherRepoTest : TeacherServiceTestBase() {
 
         val teacher = teacherRepository.listTeachers("tr-school-13").first()
 
-        assertEquals(2, teacher.subjects?.size)
+        assertEquals(2, teacher.subjectIds?.size)
     }
 }

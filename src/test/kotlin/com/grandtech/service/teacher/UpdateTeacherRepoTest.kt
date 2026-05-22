@@ -158,8 +158,8 @@ class UpdateTeacherRepoTest : TeacherServiceTestBase() {
             Teacher(id = teacher.id, subjectIds = listOf(subjectId2, subjectId3)),
         )!!
 
-        assertEquals(2, updated.subjects?.size)
-        val ids = updated.subjects!!.map { it.id }.toSet()
+        assertEquals(2, updated.subjectIds?.size)
+        val ids = updated.subjectIds!!.toSet()
         assertTrue(ids.contains(subjectId2))
         assertTrue(ids.contains(subjectId3))
         assertFalse(ids.contains(subjectId1))
@@ -181,11 +181,11 @@ class UpdateTeacherRepoTest : TeacherServiceTestBase() {
             Teacher(id = teacher.id, name = "Mr Kiprop Updated"),
         )!!
 
-        assertEquals(2, updated.subjects?.size)
+        assertEquals(2, updated.subjectIds?.size)
     }
 
     @Test
-    fun `updateTeacher returns teacher with full subjects in payload`() {
+    fun `updateTeacher returns subjectIds in payload`() {
         trackSchool("utr-school-9")
         saveSchool("utr-school-9")
         val teacher = createTeacher("utr-school-9", "Ms Alpha", "alpha@utr.ke")
@@ -195,8 +195,8 @@ class UpdateTeacherRepoTest : TeacherServiceTestBase() {
             Teacher(id = teacher.id, subjectIds = listOf(subjectId2)),
         )!!
 
-        assertEquals(1, updated.subjects?.size)
-        assertNotNull(updated.subjects!!.first().name)
+        assertEquals(1, updated.subjectIds?.size)
+        assertEquals(subjectId2, updated.subjectIds?.first())
     }
 
     // ── existsByEmailExcluding ────────────────────────────────────────────────
