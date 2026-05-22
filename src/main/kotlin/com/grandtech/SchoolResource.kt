@@ -2,7 +2,7 @@ package com.grandtech
 
 import com.grandtech.auth.Authenticated
 import com.grandtech.model.School
-import com.grandtech.model.Subject
+import com.grandtech.model.SchoolSubject
 import com.grandtech.service.SchoolService
 import com.grandtech.repository.SubjectRepository
 import com.grandtech.utils.ApiResponse
@@ -51,10 +51,12 @@ class SchoolResource {
      */
     @GET
     @Path("/subjects")
+    @Authenticated
     @Produces(MediaType.APPLICATION_JSON)
-    fun listSubjects(): ApiResponse<List<Subject>> {
+    fun listSubjects(@Context requestContext: ContainerRequestContext): ApiResponse<List<SchoolSubject>> {
         Log.info("listSubjects()---->")
-        return ApiResponse(200, "Success", subjectRepository.listAll())
+        val fedUid = requestContext.getProperty("fedUid") as String
+        return ApiResponse(200, "Success", subjectRepository.listWithTeacherCount(fedUid))
     }
 
     /**

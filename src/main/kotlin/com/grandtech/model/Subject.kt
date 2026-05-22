@@ -41,6 +41,9 @@ data class Subject(
     /** Full display name, e.g. "Integrated Science". */
     val name: String,
 
+    /** Short description of what the subject covers, shown to end users. */
+    val description: String? = null,
+
     /** Broad curriculum category driving solver constraints. */
     val type: SubjectType,
 
