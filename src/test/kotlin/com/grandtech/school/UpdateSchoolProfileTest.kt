@@ -36,7 +36,7 @@ open class UpdateSchoolProfileTest {
         Mockito.`when`(
             schoolService.updateSchool(
                 "uid-school-upd-1",
-                School(fedUid = "uid-school-upd-1", name = "New Name", county = "Mombasa"),
+                School(name = "New Name", county = "Mombasa"),
             ),
         ).thenReturn(
             School(fedUid = "uid-school-upd-1", name = "New Name", email = "original@school.ke", county = "Mombasa"),
@@ -45,7 +45,7 @@ open class UpdateSchoolProfileTest {
         given()
             .header("Authorization", "Bearer update-token")
             .contentType(ContentType.JSON)
-            .body("""{"type":"SCHOOL","fedUid":"uid-school-upd-1","name":"New Name","county":"Mombasa"}""")
+            .body("""{"name":"New Name","county":"Mombasa"}""")
             .`when`().patch("/school/profile")
             .then()
                 .statusCode(200)
@@ -70,7 +70,7 @@ open class UpdateSchoolProfileTest {
         given()
             .header("Authorization", "Bearer update-token-2")
             .contentType(ContentType.JSON)
-            .body("""{"type":"SCHOOL","fedUid":"attacker-uid","name":"Updated School","email":"hacker@evil.com","phoneNumber":"0799999999"}""")
+            .body("""{"fedUid":"attacker-uid","name":"Updated School","email":"hacker@evil.com","phoneNumber":"0799999999"}""")
             .`when`().patch("/school/profile")
             .then()
                 .statusCode(200)
