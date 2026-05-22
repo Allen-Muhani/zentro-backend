@@ -286,6 +286,6 @@ class CreateTeacherTest {
             .then()
                 .statusCode(200)
                 .body("status",               `is`(200))
-                .body("payload.subjects.size()", `is`(2))
+                .body("payload.subjectIds.size()", `is`(2))
     }
 }

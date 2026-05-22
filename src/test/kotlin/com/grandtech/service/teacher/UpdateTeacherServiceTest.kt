@@ -178,8 +178,8 @@ class UpdateTeacherServiceTest : TeacherServiceTestBase() {
         )
 
         assertEquals(200, response.status)
-        assertEquals(1, response.payload?.subjects?.size)
-        assertEquals(subjectId2, response.payload?.subjects?.first()?.id)
+        assertEquals(1, response.payload?.subjectIds?.size)
+        assertEquals(subjectId2, response.payload?.subjectIds?.first())
     }
 
     @Test
@@ -197,6 +197,6 @@ class UpdateTeacherServiceTest : TeacherServiceTestBase() {
         )
 
         assertEquals(200, response.status)
-        assertEquals(2, response.payload?.subjects?.size)
+        assertEquals(2, response.payload?.subjectIds?.size)
     }
 }

@@ -59,7 +59,7 @@ class CreateTeacherServiceTest : TeacherServiceTestBase() {
     }
 
     @Test
-    fun `createTeacher returns subjects in payload`() {
+    fun `createTeacher returns subjectIds in payload`() {
         trackSchool("ct-school-3")
         saveSchool("ct-school-3")
 
@@ -68,9 +68,8 @@ class CreateTeacherServiceTest : TeacherServiceTestBase() {
             Teacher(name = "Ms Auma", email = "auma@ct.ke", subjectIds = listOf(subjectId1, subjectId2)),
         ).payload!!
 
-        assertEquals(2, teacher.subjects?.size)
-        val subjectIds = teacher.subjects!!.map { it.id }.toSet()
-        assertEquals(setOf(subjectId1, subjectId2), subjectIds)
+        assertEquals(2, teacher.subjectIds?.size)
+        assertEquals(setOf(subjectId1, subjectId2), teacher.subjectIds!!.toSet())
     }
 
     @Test
