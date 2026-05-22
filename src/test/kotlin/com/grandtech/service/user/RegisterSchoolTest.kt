@@ -41,6 +41,17 @@ class RegisterSchoolTest : UserServiceTestBase() {
     }
 
     @Test
+    fun `register school for new user saves email from token`() {
+        track("uid-s3")
+        val tok = buildToken("uid-s3", "s3@test.com", "School Three")
+        Mockito.`when`(firebaseAuthService.verifyToken("tok")).thenReturn(tok)
+
+        val res: ApiResponse<School> = userService.registerSchool("tok")
+
+        assertEquals("s3@test.com", res.payload?.email)
+    }
+
+    @Test
     fun `register school with expired or invalid token returns 500`() {
         val ex = Mockito.mock(FirebaseAuthException::class.java)
         Mockito.`when`(firebaseAuthService.verifyToken("bad")).thenThrow(ex)

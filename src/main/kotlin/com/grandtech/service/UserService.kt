@@ -58,7 +58,7 @@ class UserService {
         if (userRepository.existsByFedUid(fedUid) || userRepository.schoolExistsByEmail(email)) {
             return ApiResponse(502, "School already in the system", null)
         }
-        val school = School(fedUid = fedUid)
+        val school = School(fedUid = fedUid, email = email)
         userRepository.saveSchool(school)
         return ApiResponse(200, "Success", school)
     }

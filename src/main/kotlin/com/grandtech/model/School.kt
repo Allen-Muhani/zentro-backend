@@ -14,14 +14,10 @@ package com.grandtech.model
  * @property subCounty    sub-county in which the school is located
  */
 data class School(
-    override val fedUid: String,
+    override val fedUid: String? = null,
     val name: String? = null,
     val email: String? = null,
     val phoneNumber: String? = null,
     val county: String? = null,
     val subCounty: String? = null,
-) : User() {
-
-    /** Returns the discriminator value identifying this user as a school. */
-    override fun getType() = "SCHOOL"
-}
+) : User()
