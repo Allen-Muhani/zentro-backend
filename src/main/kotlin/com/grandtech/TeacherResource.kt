@@ -5,6 +5,7 @@ import com.grandtech.model.Teacher
 import com.grandtech.service.SchoolService
 import com.grandtech.service.TeacherService
 import com.grandtech.utils.ApiResponse
+import io.quarkus.logging.Log
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -45,6 +46,7 @@ class TeacherResource {
         @Context requestContext: ContainerRequestContext,
         teacher: Teacher,
     ): ApiResponse<Teacher> {
+        Log.info("createTeacher()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)
@@ -60,6 +62,7 @@ class TeacherResource {
         @Context requestContext: ContainerRequestContext,
         @PathParam("id") id: String,
     ): ApiResponse<Nothing> {
+        Log.info("deleteTeacher()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)
@@ -82,6 +85,7 @@ class TeacherResource {
         @Context requestContext: ContainerRequestContext,
         teacher: Teacher,
     ): ApiResponse<Teacher> {
+        Log.info("updateTeacher()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)
@@ -99,6 +103,7 @@ class TeacherResource {
     fun listTeachers(
         @Context requestContext: ContainerRequestContext,
     ): ApiResponse<List<Teacher>> {
+        Log.info("listTeachers()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)

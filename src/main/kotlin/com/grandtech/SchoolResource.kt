@@ -6,6 +6,7 @@ import com.grandtech.model.Subject
 import com.grandtech.service.SchoolService
 import com.grandtech.repository.SubjectRepository
 import com.grandtech.utils.ApiResponse
+import io.quarkus.logging.Log
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
@@ -35,7 +36,10 @@ class SchoolResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    fun getSchool(): ApiResponse<String> = ApiResponse(200, "success", "School endpoint is live")
+    fun getSchool(): ApiResponse<String> {
+        Log.info("getSchool()---->")
+        return ApiResponse(200, "success", "School endpoint is live")
+    }
 
     /**
      * Lists all CBC JSS subjects.
@@ -48,8 +52,10 @@ class SchoolResource {
     @GET
     @Path("/subjects")
     @Produces(MediaType.APPLICATION_JSON)
-    fun listSubjects(): ApiResponse<List<Subject>> =
-        ApiResponse(200, "Success", subjectRepository.listAll())
+    fun listSubjects(): ApiResponse<List<Subject>> {
+        Log.info("listSubjects()---->")
+        return ApiResponse(200, "Success", subjectRepository.listAll())
+    }
 
     /**
      * Returns the authenticated school's profile.
@@ -67,6 +73,7 @@ class SchoolResource {
     @Authenticated
     @Produces(MediaType.APPLICATION_JSON)
     fun getSchoolDetails(@Context requestContext: ContainerRequestContext): ApiResponse<School> {
+        Log.info("getSchoolDetails()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         val school = schoolService.getSchoolByFedUid(fedUid)
         return if (school != null) {
@@ -98,6 +105,7 @@ class SchoolResource {
         @Context requestContext: ContainerRequestContext,
         school: School,
     ): ApiResponse<School> {
+        Log.info("updateSchoolDetails()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         val updated = schoolService.updateSchool(fedUid, school)
         return if (updated != null) {

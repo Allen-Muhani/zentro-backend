@@ -5,6 +5,7 @@ import com.grandtech.model.Stream
 import com.grandtech.service.SchoolService
 import com.grandtech.service.StreamService
 import com.grandtech.utils.ApiResponse
+import io.quarkus.logging.Log
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -40,6 +41,7 @@ class StreamResource {
     fun listStreams(
         @Context requestContext: ContainerRequestContext,
     ): ApiResponse<List<Stream>> {
+        Log.info("listStreams()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)
@@ -62,6 +64,7 @@ class StreamResource {
         @Context requestContext: ContainerRequestContext,
         stream: Stream,
     ): ApiResponse<Stream> {
+        Log.info("upsertStream()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)
@@ -77,6 +80,7 @@ class StreamResource {
         @Context requestContext: ContainerRequestContext,
         @PathParam("id") id: String,
     ): ApiResponse<Nothing> {
+        Log.info("deleteStream()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)
