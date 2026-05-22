@@ -1,6 +1,7 @@
 package com.grandtech.repository
 
 import com.grandtech.model.RoomCapabilityTag
+import com.grandtech.model.SchoolSubject
 import com.grandtech.model.Subject
 import com.grandtech.model.SubjectType
 import jakarta.enterprise.context.ApplicationScoped
@@ -54,6 +55,7 @@ class SubjectRepository {
                 MERGE (s:Subject {id: ${'$'}id})
                 SET s.symbol                = ${'$'}symbol,
                     s.name                  = ${'$'}name,
+                    s.description           = ${'$'}description,
                     s.type                  = ${'$'}type,
                     s.periodsPerWeek        = ${'$'}periodsPerWeek,
                     s.requiresDoubledPeriod = ${'$'}requiresDoubledPeriod,
@@ -67,6 +69,7 @@ class SubjectRepository {
                     "id"                    to subject.id,
                     "symbol"                to subject.symbol,
                     "name"                  to subject.name,
+                    "description"           to subject.description,
                     "type"                  to subject.type.name,
                     "periodsPerWeek"        to subject.periodsPerWeek,
                     "requiresDoubledPeriod" to subject.requiresDoubledPeriod,
@@ -92,6 +95,31 @@ class SubjectRepository {
         }
 
     /**
+     * Returns all subjects with the count of teachers in [schoolFedUid] that teach each one.
+     *
+     * @param schoolFedUid the Firebase UID of the authenticated school
+     * @return list of [SchoolSubject] ordered alphabetically by name
+     */
+    fun listWithTeacherCount(schoolFedUid: String): List<SchoolSubject> =
+        driver.session().use { session ->
+            session.run(
+                """
+                MATCH (sub:Subject)
+                OPTIONAL MATCH (:School {fedUid: ${'$'}fedUid})-[:HAS_TEACHER]->(t:Teacher)-[:TEACHES]->(sub)
+                WITH sub, count(t) AS teacherCount
+                RETURN sub, teacherCount
+                ORDER BY sub.name
+                """.trimIndent(),
+                mapOf("fedUid" to schoolFedUid),
+            ).list { record ->
+                SchoolSubject(
+                    subject = record["sub"].asNode().toSubject(),
+                    teacherCount = record["teacherCount"].asInt(0),
+                )
+            }
+        }
+
+    /**
      * Maps a Neo4j [org.neo4j.driver.types.Node] to a [Subject].
      * Used by repositories that return subject nodes from join queries.
      */
@@ -106,6 +134,7 @@ class SubjectRepository {
         id                    = this["id"].asString(),
         symbol                = this["symbol"].asString(),
         name                  = this["name"].asString(),
+        description           = this["description"].takeUnless { it.isNull }?.asString(),
         type                  = SubjectType.valueOf(this["type"].asString()),
         periodsPerWeek        = this["periodsPerWeek"].asInt(),
         requiresDoubledPeriod = this["requiresDoubledPeriod"].asBoolean(false),
