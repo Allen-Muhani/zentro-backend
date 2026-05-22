@@ -5,6 +5,7 @@ import com.grandtech.model.School
 import com.grandtech.model.User
 import com.grandtech.service.UserService
 import com.grandtech.utils.ApiResponse
+import io.quarkus.logging.Log
 import jakarta.inject.Inject
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -38,6 +39,7 @@ class UserResource {
     @Path("/me")
     @Produces(MediaType.APPLICATION_JSON)
     fun getCurrentUser(@HeaderParam(HttpHeaders.AUTHORIZATION) authHeader: String?): ApiResponse<User> {
+        Log.info("getCurrentUser()---->")
         if (authHeader.isNullOrBlank()) {
             return ApiResponse(401, "Unauthorized: missing Authorization header", null)
         }
@@ -59,6 +61,7 @@ class UserResource {
     @Path("/register/school")
     @Produces(MediaType.APPLICATION_JSON)
     fun registerSchool(@HeaderParam(HttpHeaders.AUTHORIZATION) authHeader: String?): ApiResponse<School> {
+        Log.info("registerSchool()---->")
         if (authHeader.isNullOrBlank()) {
             return ApiResponse(401, "Unauthorized: missing Authorization header", null)
         }

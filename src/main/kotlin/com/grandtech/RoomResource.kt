@@ -6,6 +6,7 @@ import com.grandtech.model.RoomCapabilityTag
 import com.grandtech.service.RoomService
 import com.grandtech.service.SchoolService
 import com.grandtech.utils.ApiResponse
+import io.quarkus.logging.Log
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -41,8 +42,10 @@ class RoomResource {
     @GET
     @Path("/capability-tags")
     @Produces(MediaType.APPLICATION_JSON)
-    fun listRoomCapabilityTags(): ApiResponse<List<String>> =
-        ApiResponse(200, "Success", RoomCapabilityTag.entries.map { it.name })
+    fun listRoomCapabilityTags(): ApiResponse<List<String>> {
+        Log.info("listRoomCapabilityTags()---->")
+        return ApiResponse(200, "Success", RoomCapabilityTag.entries.map { it.name })
+    }
 
     /**
      * Creates a new room and associates it with the authenticated school.
@@ -58,6 +61,7 @@ class RoomResource {
         @Context requestContext: ContainerRequestContext,
         room: Room,
     ): ApiResponse<Room> {
+        Log.info("createRoom()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)
@@ -77,6 +81,7 @@ class RoomResource {
     @Authenticated
     @Produces(MediaType.APPLICATION_JSON)
     fun listRooms(@Context requestContext: ContainerRequestContext): ApiResponse<List<Room>> {
+        Log.info("listRooms()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)
@@ -99,6 +104,7 @@ class RoomResource {
         @PathParam("id") id: String,
         room: Room,
     ): ApiResponse<Room> {
+        Log.info("updateRoom()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)
@@ -124,6 +130,7 @@ class RoomResource {
         @Context requestContext: ContainerRequestContext,
         @PathParam("id") id: String,
     ): ApiResponse<Nothing> {
+        Log.info("deleteRoom()---->")
         val fedUid = requestContext.getProperty("fedUid") as String
         schoolService.getSchoolByFedUid(fedUid)
             ?: return ApiResponse(403, "Forbidden: account is not a school", null)
