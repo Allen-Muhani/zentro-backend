@@ -32,7 +32,7 @@ class StreamResource {
 
     /**
      * Returns all streams belonging to the authenticated school, ordered by grade level then name.
-     * Each stream includes its optional `HOME_ROOM` and `FORM_TEACHER` relationships.
+     * Each stream includes its optional `FORM_TEACHER` relationship.
      */
     @GET
     @Path("/list")
@@ -52,7 +52,7 @@ class StreamResource {
      * Creates or updates a stream belonging to the authenticated school.
      *
      * Omit [Stream.id] to create; supply it to update. All business-rule validation
-     * (grade level range, name presence, room/teacher uniqueness) is performed by
+     * (grade level range, name presence, teacher uniqueness) is performed by
      * [StreamService] and reflected in the response status.
      */
     @POST

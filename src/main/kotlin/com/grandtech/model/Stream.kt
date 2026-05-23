@@ -9,7 +9,6 @@ package com.grandtech.model
  *
  * Stored in Neo4j as a `Stream` node with the following relationships:
  * - `(:School)-[:HAS_STREAM]->(:Stream)`
- * - `(:Stream)-[:HOME_ROOM]->(:Room)` — one room per stream (enforced on write)
  * - `(:Stream)-[:FORM_TEACHER]->(:Teacher)` — one form teacher per stream (enforced on write)
  */
 data class Stream(
@@ -27,13 +26,6 @@ data class Stream(
 
     /** Religious Education strand: CRE, IRE, or HRE. Null on create defaults to CRE via the service. */
     val reStrand: String? = null,
-
-    /**
-     * Home classroom for this stream. On create, supply `{ "id": "<room-uuid>" }`;
-     * the full [Room] object is returned in the response.
-     * A room may only be assigned to one stream at a time.
-     */
-    val homeRoom: Room? = null,
 
     /**
      * Form teacher assigned to this stream. On create, supply `{ "fedUid": "<uid>" }`;

@@ -14,30 +14,9 @@ class StreamRepository {
     @Inject
     lateinit var driver: Driver
 
-    /** Repository used to map room columns from join query results. */
-    @Inject
-    lateinit var roomRepository: RoomRepository
-
     /** Repository used to map teacher columns from join query results. */
     @Inject
     lateinit var teacherRepository: TeacherRepository
-
-    /**
-     * Returns true when [roomId] is already linked to a stream via `HOME_ROOM`.
-     * Pass [excludeStreamId] when updating so the stream's own current room is not
-     * treated as a conflict.
-     */
-    fun isRoomTaken(roomId: String, excludeStreamId: String? = null): Boolean =
-        driver.session().use { session ->
-            session.run(
-                """
-                MATCH (st:Stream)-[:HOME_ROOM]->(:Room {id: ${'$'}roomId})
-                WHERE ${'$'}excludeStreamId IS NULL OR st.id <> ${'$'}excludeStreamId
-                RETURN 1 LIMIT 1
-                """.trimIndent(),
-                mapOf("roomId" to roomId, "excludeStreamId" to excludeStreamId),
-            ).hasNext()
-        }
 
     /**
      * Returns true when [teacherFedUid] is already linked to a stream via `FORM_TEACHER`.
@@ -131,27 +110,6 @@ class StreamRepository {
         }
 
     /**
-     * Removes any existing `HOME_ROOM` relationship from the stream and creates a new one
-     * pointing to the room identified by [roomId].
-     */
-    fun replaceHomeRoom(streamId: String, roomId: String) {
-        driver.session().use { session ->
-            session.run(
-                """
-                MATCH (st:Stream {id: ${'$'}streamId})
-                OPTIONAL MATCH (st)-[old:HOME_ROOM]->()
-                WITH st, collect(old) AS oldRels
-                FOREACH (r IN oldRels | DELETE r)
-                WITH st
-                MATCH (room:Room {id: ${'$'}roomId})
-                CREATE (st)-[:HOME_ROOM]->(room)
-                """.trimIndent(),
-                mapOf("streamId" to streamId, "roomId" to roomId),
-            )
-        }
-    }
-
-    /**
      * Removes any existing `FORM_TEACHER` relationship from the stream and creates a new one
      * pointing to the teacher identified by [teacherFedUid].
      */
@@ -174,7 +132,7 @@ class StreamRepository {
 
     /**
      * Returns all streams belonging to [schoolFedUid] with their optional
-     * `HOME_ROOM` and `FORM_TEACHER` relationships, ordered by grade level then name.
+     * `FORM_TEACHER` relationships, ordered by grade level then name.
      * Returns an empty list when the school has no streams.
      */
     fun listStreams(schoolFedUid: String): List<Stream> =
@@ -182,11 +140,10 @@ class StreamRepository {
             session.run(
                 """
                 MATCH (:School {fedUid: ${'$'}fedUid})-[:HAS_STREAM]->(st:Stream)
-                OPTIONAL MATCH (st)-[:HOME_ROOM]->(r:Room)
                 OPTIONAL MATCH (st)-[:FORM_TEACHER]->(t:Teacher)
                 RETURN st.id AS id, st.gradeLevel AS gradeLevel, st.name AS name,
                        st.studentCount AS studentCount, st.reStrand AS reStrand,
-                       r, t
+                       t
                 ORDER BY st.gradeLevel, st.name
                 """.trimIndent(),
                 mapOf("fedUid" to schoolFedUid),
@@ -195,39 +152,29 @@ class StreamRepository {
 
     /**
      * Fetches the stream identified by [streamId] together with its optional
-     * `HOME_ROOM` and `FORM_TEACHER` relationships. Returns null if not found.
+     * `FORM_TEACHER` relationship. Returns null if not found.
      */
     fun fetchStream(streamId: String): Stream? =
         driver.session().use { session ->
             val result = session.run(
                 """
                 MATCH (st:Stream {id: ${'$'}streamId})
-                OPTIONAL MATCH (st)-[:HOME_ROOM]->(r:Room)
                 OPTIONAL MATCH (st)-[:FORM_TEACHER]->(t:Teacher)
                 RETURN st.id AS id, st.gradeLevel AS gradeLevel, st.name AS name,
                        st.studentCount AS studentCount, st.reStrand AS reStrand,
-                       r, t
+                       t
                 """.trimIndent(),
                 mapOf("streamId" to streamId),
             )
             if (result.hasNext()) mapToStream(result.next()) else null
         }
 
-    /**
-     * Maps a Neo4j [Record] row returned by a stream query to a [Stream] domain object.
-     *
-     * Scalar stream fields (`id`, `gradeLevel`, `name`, `studentCount`, `reStrand`) are read
-     * directly from the record. Optional relationships are returned as whole nodes (`r`, `t`)
-     * and delegated to [RoomRepository.mapNodeToRoom] and [TeacherRepository.mapNodeToTeacher].
-     * Both resolve to null when no `HOME_ROOM` / `FORM_TEACHER` relationship exists.
-     */
     private fun mapToStream(record: Record) = Stream(
         id           = record["id"].takeUnless { it.isNull }?.asString(),
         gradeLevel   = record["gradeLevel"].takeUnless { it.isNull }?.asInt(),
         name         = record["name"].takeUnless { it.isNull }?.asString(),
         studentCount = record["studentCount"].takeUnless { it.isNull }?.asInt(),
         reStrand     = record["reStrand"].takeUnless { it.isNull }?.asString(),
-        homeRoom     = record["r"].takeUnless { it.isNull }?.asNode()?.let { roomRepository.mapNodeToRoom(it) },
         formTeacher  = record["t"].takeUnless { it.isNull }?.asNode()?.let { teacherRepository.mapNodeToTeacher(it) },
     )
 }

@@ -12,7 +12,6 @@ import jakarta.inject.Inject
  * This layer owns all business rules:
  * - grade level must be 7, 8, or 9 (required on create, validated if provided on update)
  * - stream name is required on create, must not be blank if provided on update
- * - a room may only be assigned to one stream at a time
  * - a teacher may only be form teacher for one stream at a time
  */
 @ApplicationScoped
@@ -28,13 +27,13 @@ class StreamService {
      * On create (`id` is null) a new node is generated and linked to the school.
      * On update (`id` is provided) only supplied fields are changed; omitting a field
      * leaves the stored value and existing room/teacher relationships untouched.
-     * Supplying a new [Stream.homeRoom] or [Stream.formTeacher] replaces the existing link.
+     * Supplying a new [Stream.formTeacher] replaces the existing link.
      *
      * Returns an [ApiResponse] with:
      * - 200 on success
      * - 400 for invalid field values
      * - 404 when the school or stream cannot be found
-     * - 409 when the requested room or teacher is already assigned to another stream
+     * - 409 when the requested teacher is already assigned to another stream
      */
     fun upsertStream(schoolFedUid: String, stream: Stream): ApiResponse<Stream> {
         val level = stream.gradeLevel
@@ -50,10 +49,6 @@ class StreamService {
                 return ApiResponse(400, "Stream name must not be blank", null)
         }
 
-        val homeRoomId = stream.homeRoom?.id
-        if (homeRoomId != null && streamRepository.isRoomTaken(homeRoomId, excludeStreamId = stream.id))
-            return ApiResponse(409, "Room is already assigned to another stream")
-
         val teacherId = stream.formTeacher?.id
         if (teacherId != null && streamRepository.isTeacherTaken(teacherId, excludeStreamId = stream.id))
             return ApiResponse(409, "Teacher is already a form teacher for another stream")
@@ -66,7 +61,6 @@ class StreamService {
                 ?: return ApiResponse(404, "Stream not found")
         }
 
-        homeRoomId?.let { streamRepository.replaceHomeRoom(streamId, it) }
         teacherId?.let { streamRepository.replaceFormTeacher(streamId, it) }
 
         val result = streamRepository.fetchStream(streamId)
@@ -86,7 +80,7 @@ class StreamService {
 
     /**
      * Returns all streams belonging to [schoolFedUid], each with its optional
-     * `HOME_ROOM` and `FORM_TEACHER` relationships, ordered by grade level then name.
+     * `FORM_TEACHER` relationship, ordered by grade level then name.
      * Returns a 200 with an empty list when the school has no streams.
      */
     fun listStreams(schoolFedUid: String): ApiResponse<List<Stream>> =
