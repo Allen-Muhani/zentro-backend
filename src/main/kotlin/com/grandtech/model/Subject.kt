@@ -26,10 +26,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * [requiresDoubledPeriod] = true MUST have at least one
  * pair of consecutive teaching periods per week. Pairs must NOT
  * span Short Break (P3–P4) or Lunch Break (P6–P7).
- *
- * Room requirements are used for post-solve room assignment
- * and do not affect timetable placement unless the school has
- * only one lab or workshop room.
  */
 data class Subject(
     /** Unique code, e.g. "ENG", "MATH", "SCI". */
@@ -61,16 +57,10 @@ data class Subject(
      */
     val requiresDoubledPeriod: Boolean = false,
 
-    /**
-     * Whether this subject requires a specialist room (lab,
-     * workshop, farm, etc.). Used during post-solve room allocation.
-     */
+    /** Whether this subject requires a specialist room (lab, workshop, farm, etc.). */
     val requiresSpecialRoom: Boolean = false,
 
-    /**
-     * Room capability required by this subject. Null for regular classroom subjects.
-     * Matched against Room.capabilityTag during post-solve room allocation.
-     */
+    /** Room capability required by this subject. Null for regular classroom subjects. */
     val roomCapabilityTag: RoomCapabilityTag? = null,
 
     /**

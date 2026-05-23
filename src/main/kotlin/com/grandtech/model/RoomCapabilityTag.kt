@@ -1,23 +1,10 @@
 package com.grandtech.model
 
-/**
- * Tags a room as having a specific physical capability required by certain subjects.
- *
- * Matched against [Subject.roomCapabilityTag] during post-solve room allocation.
- */
+/** Specialist room types that a subject may require for practical lessons. */
 enum class RoomCapabilityTag {
-    /** Chemistry / Biology / Physics wet lab. Used by Integrated Science. */
     SCIENCE_LAB,
-
-    /** Pre-Technical Studies workshop for woodwork, metalwork, etc. */
     WORKSHOP,
-
-    /** School farm or garden plot. Used by Agriculture & Nutrition. */
     GARDEN,
-
-    /** Computer / ICT lab. Used by Digital Literacy. */
     COMPUTER_LAB,
-
-    /** Games field or gymnasium. Used by Creative Arts & Sports PE. */
     GAMES_FIELD,
 }
