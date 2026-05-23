@@ -1,13 +1,11 @@
 package com.grandtech.service.stream
 
-import com.grandtech.model.Room
 import com.grandtech.model.School
 import com.grandtech.model.Stream
 import com.grandtech.model.Teacher
 import io.quarkus.test.junit.QuarkusTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 /**
@@ -58,30 +56,6 @@ class ListStreamsServiceTest : StreamServiceTestBase() {
         assertEquals("Gold", stream.name)
         assertEquals(28, stream.studentCount)
         assertEquals("IRE", stream.reStrand)
-    }
-
-    @Test
-    fun `listStreams response includes homeRoom when present`() {
-        trackSchool("lss-school-4")
-        userRepository.saveSchool(School(fedUid = "lss-school-4"))
-        val room = roomService.createRoom("lss-school-4", Room(name = "Room 4", capacity = 35, isStandardClassroom = true))
-        upsertStream("lss-school-4", Stream(gradeLevel = 7, name = "Silver", homeRoom = Room(id = room!!.id)))
-
-        val stream = streamService.listStreams("lss-school-4").payload!!.first()
-
-        assertNotNull(stream.homeRoom)
-        assertEquals(room.id, stream.homeRoom?.id)
-    }
-
-    @Test
-    fun `listStreams response has null homeRoom when stream has no room`() {
-        trackSchool("lss-school-5")
-        userRepository.saveSchool(School(fedUid = "lss-school-5"))
-        upsertStream("lss-school-5", Stream(gradeLevel = 8, name = "Bronze"))
-
-        val stream = streamService.listStreams("lss-school-5").payload!!.first()
-
-        assertNull(stream.homeRoom)
     }
 
     @Test

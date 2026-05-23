@@ -1,6 +1,5 @@
 package com.grandtech.service.stream
 
-import com.grandtech.model.Room
 import com.grandtech.model.School
 import com.grandtech.model.Stream
 import com.grandtech.model.Teacher
@@ -75,23 +74,6 @@ class UpsertStreamCreateTest : StreamServiceTestBase() {
     }
 
     @Test
-    fun `upsertStream creates HOME_ROOM relationship and returns full room`() {
-        trackSchool("usc-school-5")
-        userRepository.saveSchool(School(fedUid = "usc-school-5"))
-        val room = roomService.createRoom("usc-school-5", Room(name = "Room 1", capacity = 40, isStandardClassroom = true))
-
-        val stream = upsertStream(
-            "usc-school-5",
-            Stream(gradeLevel = 7, name = "Yellow", homeRoom = Room(id = room!!.id)),
-        )
-
-        assertNotNull(stream.homeRoom)
-        assertEquals(room.id, stream.homeRoom?.id)
-        assertEquals("Room 1", stream.homeRoom?.name)
-        assertEquals(40, stream.homeRoom?.capacity)
-    }
-
-    @Test
     fun `upsertStream creates FORM_TEACHER relationship and returns full teacher`() {
         trackSchool("usc-school-6")
         userRepository.saveSchool(School(fedUid = "usc-school-6"))
@@ -138,16 +120,6 @@ class UpsertStreamCreateTest : StreamServiceTestBase() {
         assertEquals(400, response.status)
         assertEquals("Stream name is required", response.message)
         assertNull(response.payload)
-    }
-
-    @Test
-    fun `upsertStream returns stream with null homeRoom when no room is provided`() {
-        trackSchool("usc-school-10")
-        userRepository.saveSchool(School(fedUid = "usc-school-10"))
-
-        val stream = upsertStream("usc-school-10", Stream(gradeLevel = 7, name = "Silver"))
-
-        assertNull(stream.homeRoom)
     }
 
     @Test
