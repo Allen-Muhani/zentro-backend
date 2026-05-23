@@ -1,6 +1,5 @@
 package com.grandtech.service.stream
 
-import com.grandtech.model.Room
 import com.grandtech.model.School
 import com.grandtech.model.Stream
 import com.grandtech.model.Teacher
@@ -74,32 +73,6 @@ class UpsertStreamUpdateTest : StreamServiceTestBase() {
     }
 
     @Test
-    fun `upsertStream replaces home room when a new room is provided`() {
-        trackSchool("usu-school-4")
-        userRepository.saveSchool(School(fedUid = "usu-school-4"))
-        val roomA = roomService.createRoom("usu-school-4", Room(name = "Room A", capacity = 30, isStandardClassroom = true))
-        val roomB = roomService.createRoom("usu-school-4", Room(name = "Room B", capacity = 25, isStandardClassroom = true))
-        val created = upsertStream("usu-school-4", Stream(gradeLevel = 7, name = "Blue", homeRoom = Room(id = roomA!!.id)))
-
-        val updated = upsertStream("usu-school-4", Stream(id = created.id, homeRoom = Room(id = roomB!!.id)))
-
-        assertEquals(roomB.id, updated.homeRoom?.id)
-        assertEquals("Room B", updated.homeRoom?.name)
-    }
-
-    @Test
-    fun `upsertStream keeps existing home room when homeRoom is not provided`() {
-        trackSchool("usu-school-5")
-        userRepository.saveSchool(School(fedUid = "usu-school-5"))
-        val room = roomService.createRoom("usu-school-5", Room(name = "Room C", capacity = 30, isStandardClassroom = true))
-        val created = upsertStream("usu-school-5", Stream(gradeLevel = 8, name = "White", homeRoom = Room(id = room!!.id)))
-
-        val updated = upsertStream("usu-school-5", Stream(id = created.id, name = "Renamed"))
-
-        assertEquals(room.id, updated.homeRoom?.id)
-    }
-
-    @Test
     fun `upsertStream replaces form teacher when a new teacher is provided`() {
         trackSchool("usu-school-6")
         userRepository.saveSchool(School(fedUid = "usu-school-6"))
@@ -144,24 +117,6 @@ class UpsertStreamUpdateTest : StreamServiceTestBase() {
         val response = streamService.upsertStream("usu-school-8b", Stream(id = stream.id, name = "Hijacked"))
 
         assertEquals(404, response.status)
-        assertNull(response.payload)
-    }
-
-    @Test
-    fun `upsertStream returns 409 when room is already assigned to another stream`() {
-        trackSchool("usu-school-9")
-        userRepository.saveSchool(School(fedUid = "usu-school-9"))
-        val room = roomService.createRoom("usu-school-9", Room(name = "Taken Room", capacity = 30, isStandardClassroom = true))
-        upsertStream("usu-school-9", Stream(gradeLevel = 7, name = "Blue", homeRoom = Room(id = room!!.id)))
-        val other = upsertStream("usu-school-9", Stream(gradeLevel = 8, name = "Red"))
-
-        val response = streamService.upsertStream(
-            "usu-school-9",
-            Stream(id = other.id, homeRoom = Room(id = room.id)),
-        )
-
-        assertEquals(409, response.status)
-        assertEquals("Room is already assigned to another stream", response.message)
         assertNull(response.payload)
     }
 

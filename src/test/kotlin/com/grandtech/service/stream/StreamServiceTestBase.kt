@@ -6,7 +6,6 @@ import com.grandtech.repository.StreamRepository
 import com.grandtech.repository.TeacherRepository
 import com.grandtech.repository.UserRepository
 import com.grandtech.service.CbcDataSeeder
-import com.grandtech.service.RoomService
 import com.grandtech.service.StreamService
 import io.quarkus.test.junit.QuarkusTest
 import jakarta.inject.Inject
@@ -30,9 +29,6 @@ abstract class StreamServiceTestBase {
     lateinit var streamRepository: StreamRepository
 
     @Inject
-    lateinit var roomService: RoomService
-
-    @Inject
     lateinit var userRepository: UserRepository
 
     @Inject
@@ -43,7 +39,7 @@ abstract class StreamServiceTestBase {
 
     private val trackedSchoolUids = mutableSetOf<String>()
 
-    /** Registers school UIDs so [cleanUp] deletes them along with their rooms, streams and teachers. */
+    /** Registers school UIDs so [cleanUp] deletes them along with their streams and teachers. */
     protected fun trackSchool(vararg uids: String) {
         trackedSchoolUids.addAll(uids.toList())
     }
@@ -80,10 +76,9 @@ abstract class StreamServiceTestBase {
                 session.run(
                     """
                     MATCH (s:School) WHERE s.fedUid IN ${'$'}uids
-                    OPTIONAL MATCH (s)-[:HAS_ROOM]->(r:Room)
                     OPTIONAL MATCH (s)-[:HAS_STREAM]->(st:Stream)
                     OPTIONAL MATCH (s)-[:HAS_TEACHER]->(t:Teacher)
-                    DETACH DELETE s, r, st, t
+                    DETACH DELETE s, st, t
                     """.trimIndent(),
                     mapOf("uids" to trackedSchoolUids.toList()),
                 )

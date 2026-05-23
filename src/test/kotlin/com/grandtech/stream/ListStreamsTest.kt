@@ -1,7 +1,6 @@
 package com.grandtech.stream
 
 import com.grandtech.auth.FirebaseAuthService
-import com.grandtech.model.Room
 import com.grandtech.model.School
 import com.grandtech.model.Stream
 import com.grandtech.model.Teacher
@@ -9,7 +8,6 @@ import com.grandtech.repository.TeacherRepository
 import com.grandtech.repository.UserRepository
 import com.grandtech.school.GetSchoolProfileTest
 import com.grandtech.service.CbcDataSeeder
-import com.grandtech.service.RoomService
 import com.grandtech.service.StreamService
 import io.quarkus.test.InjectMock
 import io.quarkus.test.junit.QuarkusTest
@@ -37,9 +35,6 @@ class ListStreamsTest {
 
     @Inject
     lateinit var userRepository: UserRepository
-
-    @Inject
-    lateinit var roomService: RoomService
 
     @Inject
     lateinit var streamService: StreamService
@@ -74,10 +69,9 @@ class ListStreamsTest {
                 session.run(
                     """
                     MATCH (s:School) WHERE s.fedUid IN ${'$'}uids
-                    OPTIONAL MATCH (s)-[:HAS_ROOM]->(r:Room)
                     OPTIONAL MATCH (s)-[:HAS_STREAM]->(st:Stream)
                     OPTIONAL MATCH (s)-[:HAS_TEACHER]->(t:Teacher)
-                    DETACH DELETE s, r, st, t
+                    DETACH DELETE s, st, t
                     """.trimIndent(),
                     mapOf("uids" to trackedSchoolUids.toList()),
                 )
@@ -149,39 +143,6 @@ class ListStreamsTest {
                 .body("payload[0].studentCount", `is`(30))
                 .body("payload[1].gradeLevel", `is`(8))
                 .body("payload[1].name",       `is`("Red"))
-    }
-
-    @Test
-    fun `returns stream with homeRoom when HOME_ROOM relationship exists`() {
-        trackSchool("lst-school-3")
-        userRepository.saveSchool(School(fedUid = "lst-school-3"))
-        stubToken("lst-school-3", "Bearer lst-token-3")
-        val room = roomService.createRoom("lst-school-3", Room(name = "Lab A", capacity = 25, isStandardClassroom = false))
-        streamService.upsertStream("lst-school-3", Stream(gradeLevel = 7, name = "Green", homeRoom = Room(id = room!!.id)))
-
-        given()
-            .header("Authorization", "Bearer lst-token-3")
-            .`when`().get("/school/stream/list")
-            .then()
-                .statusCode(200)
-                .body("payload[0].homeRoom.id",       `is`(room.id))
-                .body("payload[0].homeRoom.name",     `is`("Lab A"))
-                .body("payload[0].homeRoom.capacity", `is`(25))
-    }
-
-    @Test
-    fun `returns stream with null homeRoom when no HOME_ROOM relationship`() {
-        trackSchool("lst-school-4")
-        userRepository.saveSchool(School(fedUid = "lst-school-4"))
-        stubToken("lst-school-4", "Bearer lst-token-4")
-        streamService.upsertStream("lst-school-4", Stream(gradeLevel = 9, name = "Gold"))
-
-        given()
-            .header("Authorization", "Bearer lst-token-4")
-            .`when`().get("/school/stream/list")
-            .then()
-                .statusCode(200)
-                .body("payload[0].homeRoom", nullValue())
     }
 
     @Test

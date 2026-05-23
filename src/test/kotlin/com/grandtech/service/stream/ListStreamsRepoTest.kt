@@ -1,13 +1,11 @@
 package com.grandtech.service.stream
 
-import com.grandtech.model.Room
 import com.grandtech.model.School
 import com.grandtech.model.Stream
 import com.grandtech.model.Teacher
 import io.quarkus.test.junit.QuarkusTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -15,8 +13,8 @@ import org.junit.jupiter.api.Test
  * Integration tests for [com.grandtech.repository.StreamRepository.listStreams].
  *
  * Each test provisions its own isolated school and streams so runs are independent.
- * Relationship hydration (homeRoom, formTeacher) is tested here because the repository
- * owns the Cypher query that joins Room and Teacher nodes.
+ * Relationship hydration (formTeacher) is tested here because the repository
+ * owns the Cypher query that joins Teacher nodes.
  */
 @QuarkusTest
 class ListStreamsRepoTest : StreamServiceTestBase() {
@@ -59,21 +57,6 @@ class ListStreamsRepoTest : StreamServiceTestBase() {
     }
 
     @Test
-    fun `listStreams hydrates homeRoom from HOME_ROOM relationship`() {
-        trackSchool("lsr-school-4")
-        userRepository.saveSchool(School(fedUid = "lsr-school-4"))
-        val room = roomService.createRoom("lsr-school-4", Room(name = "Lab 1", capacity = 30, isStandardClassroom = false))
-        upsertStream("lsr-school-4", Stream(gradeLevel = 7, name = "Green", homeRoom = Room(id = room!!.id)))
-
-        val stream = streamRepository.listStreams("lsr-school-4").first()
-
-        assertNotNull(stream.homeRoom)
-        assertEquals(room.id, stream.homeRoom?.id)
-        assertEquals("Lab 1", stream.homeRoom?.name)
-        assertEquals(30, stream.homeRoom?.capacity)
-    }
-
-    @Test
     fun `listStreams hydrates formTeacher from FORM_TEACHER relationship`() {
         trackSchool("lsr-school-5")
         userRepository.saveSchool(School(fedUid = "lsr-school-5"))
@@ -86,17 +69,6 @@ class ListStreamsRepoTest : StreamServiceTestBase() {
         assertEquals(teacher.id, stream.formTeacher?.id)
         assertEquals("Mr Kamau", stream.formTeacher?.name)
         assertEquals("kamau@school.ke", stream.formTeacher?.email)
-    }
-
-    @Test
-    fun `listStreams returns null homeRoom when stream has no HOME_ROOM relationship`() {
-        trackSchool("lsr-school-6")
-        userRepository.saveSchool(School(fedUid = "lsr-school-6"))
-        upsertStream("lsr-school-6", Stream(gradeLevel = 7, name = "Orange"))
-
-        val stream = streamRepository.listStreams("lsr-school-6").first()
-
-        assertNull(stream.homeRoom)
     }
 
     @Test

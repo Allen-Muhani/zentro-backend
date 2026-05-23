@@ -59,10 +59,9 @@ class UpsertStreamTest {
                 session.run(
                     """
                     MATCH (s:School) WHERE s.fedUid IN ${'$'}uids
-                    OPTIONAL MATCH (s)-[:HAS_ROOM]->(r:Room)
                     OPTIONAL MATCH (s)-[:HAS_STREAM]->(st:Stream)
                     OPTIONAL MATCH (s)-[:HAS_TEACHER]->(t:Teacher)
-                    DETACH DELETE s, r, st, t
+                    DETACH DELETE s, st, t
                     """.trimIndent(),
                     mapOf("uids" to trackedSchoolUids.toList()),
                 )
