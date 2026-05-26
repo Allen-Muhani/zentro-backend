@@ -233,10 +233,13 @@ class TimetableRepository {
             session.run(
                 """
                 MATCH (:TimetableRun {id: ${'$'}runId})-[:HAS_ENTRY]->(en:TimetableEntry)
-                      -[:FOR_STREAM]->(:Stream {id: ${'$'}streamId})
+                      -[:FOR_STREAM]->(st:Stream {id: ${'$'}streamId})
                 MATCH (en)-[:FOR_SUBJECT]->(sub:Subject)
                 OPTIONAL MATCH (en)-[:TAUGHT_BY]->(t:Teacher)
-                RETURN en, sub.id AS subjectId, t.id AS teacherId
+                RETURN en,
+                       st.id AS streamId, st.name AS streamName,
+                       sub.id AS subjectId, sub.name AS subjectName, sub.symbol AS subjectSymbol,
+                       t.id AS teacherId, t.name AS teacherName
                 ORDER BY en.day, en.period
                 """.trimIndent(),
                 mapOf("runId" to runId, "streamId" to streamId),
@@ -259,7 +262,10 @@ class TimetableRepository {
                       -[:TAUGHT_BY]->(t:Teacher {id: ${'$'}teacherId})
                 MATCH (en)-[:FOR_SUBJECT]->(sub:Subject)
                 MATCH (en)-[:FOR_STREAM]->(st:Stream)
-                RETURN en, sub.id AS subjectId, st.id AS streamId, t.id AS teacherId
+                RETURN en,
+                       st.id AS streamId, st.name AS streamName,
+                       sub.id AS subjectId, sub.name AS subjectName, sub.symbol AS subjectSymbol,
+                       t.id AS teacherId, t.name AS teacherName
                 ORDER BY en.day, en.period
                 """.trimIndent(),
                 mapOf("runId" to runId, "teacherId" to teacherId),
@@ -286,10 +292,13 @@ class TimetableRepository {
         val en = record["en"].asNode()
         return TimetableEntry(
             id = en["id"].takeUnless { it.isNull }?.asString(),
-            streamId = record["streamId"].takeUnless { it.isNull }?.asString()
-                ?: en["streamId"].takeUnless { it.isNull }?.asString(),
+            streamId = record["streamId"].takeUnless { it.isNull }?.asString(),
+            streamName = record["streamName"].takeUnless { it.isNull }?.asString(),
             subjectId = record["subjectId"].takeUnless { it.isNull }?.asString(),
+            subjectName = record["subjectName"].takeUnless { it.isNull }?.asString(),
+            subjectSymbol = record["subjectSymbol"].takeUnless { it.isNull }?.asString(),
             teacherId = record["teacherId"].takeUnless { it.isNull }?.asString(),
+            teacherName = record["teacherName"].takeUnless { it.isNull }?.asString(),
             day = en["day"].takeUnless { it.isNull }?.asString(),
             period = en["period"].takeUnless { it.isNull }?.asInt(),
             startTime = en["startTime"].takeUnless { it.isNull }?.asString(),

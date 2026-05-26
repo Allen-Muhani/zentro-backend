@@ -15,10 +15,18 @@ data class TimetableEntry(
     val id: String? = null,
     /** ID of the stream this lesson is scheduled for. */
     val streamId: String? = null,
+    /** Display name of the stream, e.g. "Grade 7 Blue". */
+    val streamName: String? = null,
     /** ID of the subject being taught. */
     val subjectId: String? = null,
+    /** Full display name of the subject, e.g. "Integrated Science". */
+    val subjectName: String? = null,
+    /** Short symbol for the subject, e.g. "SCI". */
+    val subjectSymbol: String? = null,
     /** Null for PPI entries where the form teacher could not be resolved. */
     val teacherId: String? = null,
+    /** Full name of the teacher, null when teacherId is null. */
+    val teacherName: String? = null,
     /** Day name: MONDAY … FRIDAY. */
     val day: String? = null,
     /** 1-based teaching period number (1–8). */

@@ -298,8 +298,13 @@ class TimetableRepositoryTest {
         assertEquals(1, entries.size)
         assertEquals("MONDAY", entries[0].day)
         assertEquals(1, entries[0].period)
+        assertEquals(streamId, entries[0].streamId)
+        assertEquals("Blue", entries[0].streamName)
         assertEquals(subjectId, entries[0].subjectId)
+        assertEquals("English", entries[0].subjectName)
+        assertEquals("ENG", entries[0].subjectSymbol)
         assertEquals(teacherId, entries[0].teacherId)
+        assertEquals("Test Teacher", entries[0].teacherName)
     }
 
     @Test
@@ -336,7 +341,7 @@ class TimetableRepositoryTest {
 
         val entries = timetableRepository.getEntriesForStream(runId, streamId)
         assertEquals(2, entries.size)
-        assertTrue(entries.all { it.streamId == streamId || it.streamId == null })
+        assertTrue(entries.all { it.streamId == streamId })
     }
 
     @Test
@@ -361,6 +366,11 @@ class TimetableRepositoryTest {
         val entries = timetableRepository.getEntriesForTeacher(runId, teacherId)
         assertEquals(2, entries.size)
         assertTrue(entries.all { it.teacherId == teacherId })
+        assertTrue(entries.all { it.teacherName == "Test Teacher" })
+        assertTrue(entries.all { it.streamId == streamId })
+        assertTrue(entries.all { it.streamName == "Blue" })
+        assertTrue(entries.all { it.subjectName == "English" })
+        assertTrue(entries.all { it.subjectSymbol == "ENG" })
     }
 
     @Test
