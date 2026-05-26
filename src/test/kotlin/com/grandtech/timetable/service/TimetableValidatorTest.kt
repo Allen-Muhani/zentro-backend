@@ -138,11 +138,12 @@ class TimetableValidatorTest {
 
     @Test
     fun `info issue when capacity utilisation is tight but sufficient`() {
-        // 1 stream, MAT needs 5 periods/week. Teacher with 6 periods → 83% utilisation,
-        // below the 115% threshold so INFO should be emitted.
+        // 2 streams: MAT needs 5 × 2 = 10 periods/week total.
+        // Teacher with maxPeriodsPerWeek = 11 → capacity/demand = 11/10 = 1.10, which
+        // is below the 1.15 threshold, so INFO should be emitted (no scheduling slack).
         val tightTeacher = Teacher(
             id = "t-mat-tight",
-            maxPeriodsPerWeek = 6,
+            maxPeriodsPerWeek = 11,
             maxPeriodsPerDay  = 3,
             subjectIds        = listOf("MAT"),
         )
@@ -151,7 +152,7 @@ class TimetableValidatorTest {
         }
 
         val report = validator.validate(
-            streams  = listOf(stream()),
+            streams  = listOf(stream("s1"), stream("s2")),
             teachers = listOf(tightTeacher) + otherTeachers,
             subjects = allSubjects,
         )

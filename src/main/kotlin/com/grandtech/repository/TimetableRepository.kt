@@ -256,10 +256,10 @@ class TimetableRepository {
             session.run(
                 """
                 MATCH (:TimetableRun {id: ${'$'}runId})-[:HAS_ENTRY]->(en:TimetableEntry)
-                      -[:TAUGHT_BY]->(:Teacher {id: ${'$'}teacherId})
+                      -[:TAUGHT_BY]->(t:Teacher {id: ${'$'}teacherId})
                 MATCH (en)-[:FOR_SUBJECT]->(sub:Subject)
                 MATCH (en)-[:FOR_STREAM]->(st:Stream)
-                RETURN en, sub.id AS subjectId, st.id AS streamId
+                RETURN en, sub.id AS subjectId, st.id AS streamId, t.id AS teacherId
                 ORDER BY en.day, en.period
                 """.trimIndent(),
                 mapOf("runId" to runId, "teacherId" to teacherId),

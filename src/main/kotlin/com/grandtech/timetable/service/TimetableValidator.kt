@@ -106,14 +106,14 @@ class TimetableValidator {
                 weeklyCapacity == weeklyDemand -> issues.add(
                     DiagnosticIssue(
                         severity = IssueSeverity.WARNING,
-                        message = "${subject.name}: capacity exactly meets demand (${weeklyDemand} periods/week). " +
-                            "No scheduling slack.",
+                        message = "${subject.name} (${subject.id}): capacity exactly meets demand " +
+                            "(${weeklyDemand} periods/week). No scheduling slack.",
                     ),
                 )
                 weeklyCapacity.toDouble() / weeklyDemand < 1.15 -> issues.add(
                     DiagnosticIssue(
                         severity = IssueSeverity.INFO,
-                        message = "${subject.name}: ${qualifiedTeachers.size} teacher(s), " +
+                        message = "${subject.name} (${subject.id}): ${qualifiedTeachers.size} teacher(s), " +
                             "capacity utilisation ${weeklyDemand * 100 / weeklyCapacity}%.",
                     ),
                 )
@@ -130,7 +130,7 @@ class TimetableValidator {
                 issues.add(
                     DiagnosticIssue(
                         severity = IssueSeverity.CRITICAL,
-                        message = "Teacher '${teacher.name}': maxPeriodsPerWeek ($weekly) > " +
+                        message = "Teacher '${teacher.id}': maxPeriodsPerWeek ($weekly) > " +
                             "5 × maxPeriodsPerDay ($daily). Constraint is unsatisfiable.",
                     ),
                 )
