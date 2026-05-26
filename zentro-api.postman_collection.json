@@ -1,0 +1,493 @@
+{
+  "info": {
+    "_postman_id": "zentro-api-v1",
+    "name": "Zentro API",
+    "description": "Kenya CBC JSS timetable management API.\n\n**Auth:** All endpoints marked 🔒 require a Firebase ID token.\nSet `authToken` in the collection variables, or run `GET /users/me` first to verify your token.\n\n**Base URL:** change `baseUrl` in collection variables to point at your environment.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string",
+      "description": "Firebase ID token — paste the raw token (without 'Bearer ')."
+    },
+    {
+      "key": "streamId",
+      "value": "",
+      "type": "string",
+      "description": "ID of a stream returned by upsert or list."
+    },
+    {
+      "key": "teacherId",
+      "value": "",
+      "type": "string",
+      "description": "ID of a teacher returned by create or list."
+    },
+    {
+      "key": "runId",
+      "value": "",
+      "type": "string",
+      "description": "UUID of a timetable run returned by generate or list runs."
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth & Registration",
+      "description": "User lookup and school account registration. These endpoints read the Firebase token directly from the Authorization header.",
+      "item": [
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "Firebase ID token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Returns the authenticated user's profile. Verifies the Firebase token and returns the matching User node from the graph.\n\n**Responses**\n- `200` — user profile\n- `401` — missing or invalid Authorization header"
+          },
+          "response": []
+        },
+        {
+          "name": "Register School",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "Firebase ID token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/register/school",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "register", "school"]
+            },
+            "description": "Creates a School node in the graph linked to the authenticated Firebase UID. Call once per account.\n\n**Responses**\n- `200` — newly created school\n- `401` — missing or invalid Authorization header"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "School",
+      "description": "School profile and CBC subject catalogue. All endpoints require a valid Firebase token. 🔒",
+      "item": [
+        {
+          "name": "Get School Profile 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/school/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "profile"]
+            },
+            "description": "Returns the authenticated school's profile (name, email, county, subCounty).\n\n**Responses**\n- `200` — school profile\n- `403` — account is not a school"
+          },
+          "response": []
+        },
+        {
+          "name": "Update School Profile 🔒",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Starehe Boys Centre\",\n  \"phoneNumber\": \"+254712345678\",\n  \"county\": \"Nairobi\",\n  \"subCounty\": \"Starehe\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/school/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "profile"]
+            },
+            "description": "Updates mutable fields on the school profile. Omit any field to leave it unchanged. `fedUid` and `email` are never overwritten.\n\n**Responses**\n- `200` — updated school\n- `403` — account is not a school\n- `404` — school not found"
+          },
+          "response": []
+        },
+        {
+          "name": "List Subjects 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/school/subjects",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "subjects"]
+            },
+            "description": "Returns all 10 CBC JSS learning areas seeded at startup, each enriched with a `teacherCount` — the number of teachers at this school qualified to teach that subject.\n\n**Responses**\n- `200` — list of SchoolSubject objects"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Streams",
+      "description": "Class group (stream) management. All endpoints require a valid Firebase token. 🔒",
+      "item": [
+        {
+          "name": "List Streams 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/school/stream/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "stream", "list"]
+            },
+            "description": "Returns all streams for the authenticated school, ordered by grade level then name. Each stream includes its form teacher if one has been assigned.\n\n**Responses**\n- `200` — list of Stream objects\n- `403` — account is not a school"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Stream 🔒",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gradeLevel\": 7,\n  \"name\": \"Blue\",\n  \"studentCount\": 40,\n  \"reStrand\": \"CRE\",\n  \"formTeacher\": { \"id\": \"{{teacherId}}\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/school/stream/upsert",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "stream", "upsert"]
+            },
+            "description": "Creates a new stream. Omit `id` to trigger a create. `formTeacher` is optional — supply `{ \"id\": \"<teacherId>\" }` to assign one.\n\n`reStrand` must be one of `CRE`, `IRE`, `HRE`. Defaults to `CRE` if omitted.\n\n**Responses**\n- `200` — created stream with generated id\n- `400` — validation error (gradeLevel out of range, blank name, etc.)\n- `403` — account is not a school\n- `404` — school or form teacher not found\n- `409` — form teacher already assigned to another stream"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Stream 🔒",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{streamId}}\",\n  \"name\": \"Blue\",\n  \"studentCount\": 42,\n  \"reStrand\": \"IRE\",\n  \"formTeacher\": { \"id\": \"{{teacherId}}\" }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/school/stream/upsert",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "stream", "upsert"]
+            },
+            "description": "Updates an existing stream. Supply `id` to trigger an update. Only provided fields are changed — omit a field to leave it unchanged.\n\n**Responses**\n- `200` — updated stream\n- `400` — validation error\n- `403` — account is not a school\n- `404` — stream or form teacher not found\n- `409` — form teacher already assigned to another stream"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Stream 🔒",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/school/stream/delete/{{streamId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "stream", "delete", "{{streamId}}"]
+            },
+            "description": "Deletes the stream and all its relationships (form teacher link, timetable entries). This is a hard delete — it cannot be undone.\n\n**Responses**\n- `200` — stream deleted\n- `403` — account is not a school\n- `404` — stream not found under this school"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Teachers",
+      "description": "Teaching staff management. All endpoints require a valid Firebase token. 🔒",
+      "item": [
+        {
+          "name": "List Teachers 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/school/teacher/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "teacher", "list"]
+            },
+            "description": "Returns all teachers for the authenticated school ordered by name. Each teacher includes their qualified subject IDs.\n\n**Responses**\n- `200` — list of Teacher objects\n- `403` — account is not a school"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Teacher 🔒",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Wanjiru\",\n  \"email\": \"j.wanjiru@school.ke\",\n  \"phone\": \"+254712345678\",\n  \"tscNumber\": \"TSC123456\",\n  \"maxPeriodsPerWeek\": 23,\n  \"maxPeriodsPerDay\": 6,\n  \"subjectIds\": [\"MAT\", \"SCI\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/school/teacher/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "teacher", "create"]
+            },
+            "description": "Creates a new teacher linked to the authenticated school.\n\n`subjectIds` accepts 1–2 CBC subject IDs from: `ENG`, `KIS`, `MAT`, `SCI`, `PTS`, `SST`, `RE`, `AGR`, `CAS`.\n\n`maxPeriodsPerWeek` defaults to 23, `maxPeriodsPerDay` defaults to 6.\n\n**Responses**\n- `200` — created teacher with generated id\n- `400` — validation error (missing name, missing subjects, etc.)\n- `403` — account is not a school\n- `409` — email already in use"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Teacher 🔒",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{teacherId}}\",\n  \"name\": \"Jane Wanjiru\",\n  \"phone\": \"+254787654321\",\n  \"maxPeriodsPerWeek\": 20,\n  \"maxPeriodsPerDay\": 5,\n  \"subjectIds\": [\"MAT\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/school/teacher/update",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "teacher", "update"]
+            },
+            "description": "Updates a teacher's details. Supply `id` plus any fields to change — omit a field to leave it unchanged.\n\nIf `subjectIds` is provided it **fully replaces** the current subject list (1–2 entries required).\n\n**Responses**\n- `200` — updated teacher\n- `400` — validation error\n- `403` — account is not a school\n- `404` — teacher not found under this school\n- `409` — email already taken by another teacher"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Teacher 🔒",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/school/teacher/delete/{{teacherId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "teacher", "delete", "{{teacherId}}"]
+            },
+            "description": "Deletes the teacher and all their relationships (HAS_TEACHER, TEACHES, FORM_TEACHER). This is a hard delete.\n\n**Responses**\n- `200` — teacher deleted\n- `403` — account is not a school\n- `404` — teacher not found under this school"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Timetable",
+      "description": "Timetable generation and retrieval. All endpoints require a valid Firebase token. 🔒\n\nTypical flow:\n1. `POST /generate` → note the returned `runId`\n2. Poll `GET /runs/{runId}` until `solverStatus` is `OPTIMAL` or `FEASIBLE`\n3. Fetch per-stream or per-teacher views using the same `runId`",
+      "item": [
+        {
+          "name": "Generate Timetable 🔒",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"academicYear\": \"2025\",\n  \"term\": \"Term 1\",\n  \"timeLimitSeconds\": 120\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/school/timetable/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "timetable", "generate"]
+            },
+            "description": "Triggers async timetable generation for the school. Returns immediately with a run whose `status` is `RUNNING`. The solver runs in the background.\n\n`timeLimitSeconds` defaults to `120` if omitted.\n\nPoll `GET /runs/{runId}` for completion.\n\n**Responses**\n- `200` — run created (save the `id` as `runId`)\n- `403` — account is not a school\n- `500` — run could not be persisted"
+          },
+          "response": []
+        },
+        {
+          "name": "List Timetable Runs 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/school/timetable/runs",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "timetable", "runs"]
+            },
+            "description": "Returns all timetable runs for the school, newest first. Useful for listing history or finding a previous run's ID.\n\n**Responses**\n- `200` — list of TimetableRun objects\n- `403` — account is not a school"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Timetable Run 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/school/timetable/runs/{{runId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "timetable", "runs", "{{runId}}"]
+            },
+            "description": "Returns a single run including `solverStatus`, `objectiveValue`, `diagnosticReport`, and any `violations`. Poll this endpoint after `POST /generate` until `solverStatus` is no longer `RUNNING`.\n\n**Responses**\n- `200` — TimetableRun\n- `403` — account is not a school\n- `404` — run not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Stream Timetable 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/school/timetable/runs/{{runId}}/stream/{{streamId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "timetable", "runs", "{{runId}}", "stream", "{{streamId}}"]
+            },
+            "description": "Returns all timetable entries for a specific stream within a completed run. Each entry includes day, period, start/end times, subject, teacher, and double-period flags.\n\n**Responses**\n- `200` — list of TimetableEntry objects (40 per week)\n- `403` — account is not a school"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Teacher Timetable 🔒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/school/timetable/runs/{{runId}}/teacher/{{teacherId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "timetable", "runs", "{{runId}}", "teacher", "{{teacherId}}"]
+            },
+            "description": "Returns all timetable entries assigned to a specific teacher within a completed run — their personal weekly schedule.\n\n**Responses**\n- `200` — list of TimetableEntry objects\n- `403` — account is not a school"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
