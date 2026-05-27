@@ -13,12 +13,13 @@ import org.junit.jupiter.api.Test
 /**
  * End-to-end constraint verification tests for [TimetableSolver].
  *
- * Each test solves a real CP-SAT model and then inspects the output entries to
- * confirm the relevant constraint holds — no mocks, no stubbed solver output.
+ * Each test runs the full Timefold solver with a crafted input and then
+ * inspects the output entries to confirm the relevant constraint holds —
+ * no mocks, no stubbed solver output.
  * HC11 is covered separately in [SolverHc11Test].
  *
  * All solves use [SOLVER_TIME_LIMIT_SECONDS]. Single-stream configurations
- * finish well under 30 s on a development machine.
+ * typically finish well under 30 s on a development machine.
  */
 @QuarkusTest
 class SolverConstraintTest : TimetableSolverTestBase() {

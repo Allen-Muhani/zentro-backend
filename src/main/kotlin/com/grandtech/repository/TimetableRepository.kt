@@ -67,8 +67,8 @@ class TimetableRepository {
      * Marks a run as COMPLETED and writes solver statistics onto the node.
      *
      * @param runId          UUID of the run to update
-     * @param solverStatus   CP-SAT status name (e.g. "OPTIMAL")
-     * @param objectiveValue minimised objective value from CP-SAT
+     * @param solverStatus   solver status name (e.g. "FEASIBLE", "INFEASIBLE")
+     * @param objectiveValue cumulative soft-constraint penalty from the solver
      * @param wallTimeMs     wall-clock solve time in milliseconds
      * @param violations     soft-constraint or structural violations
      */

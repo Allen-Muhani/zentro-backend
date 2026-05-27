@@ -20,7 +20,7 @@ data class TimetableRun(
     val status: String? = null,
     /** OPTIMAL, FEASIBLE, INFEASIBLE, or UNKNOWN — set on completion. */
     val solverStatus: String? = null,
-    /** Minimised objective value returned by CP-SAT; lower is better. */
+    /** Cumulative soft-constraint penalty from the solver; lower is better. */
     val objectiveValue: Long? = null,
     /** Wall-clock time the solver ran in milliseconds. */
     val solverWallTimeMs: Long? = null,

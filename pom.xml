@@ -8,6 +8,7 @@
 
     <properties>
         <kotlin.version>2.3.21</kotlin.version>
+        <timefold.version>2.1.0</timefold.version>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -78,9 +79,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.ortools</groupId>
-            <artifactId>ortools-java</artifactId>
-            <version>9.10.4067</version>
+            <groupId>ai.timefold.solver</groupId>
+            <artifactId>timefold-solver-quarkus</artifactId>
+            <version>${timefold.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

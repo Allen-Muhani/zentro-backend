@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 /**
  * Tests for HC11 — no consecutive same-teacher appearances in a stream.
  *
- * Each test runs the full CP-SAT solver with a crafted input, then inspects
+ * Each test runs the full Timefold solver with a crafted input, then inspects
  * the output for violations. No database interaction occurs; CDI is the only
  * Quarkus facility required.
  *

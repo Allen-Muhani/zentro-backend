@@ -38,7 +38,7 @@ data class DiagnosticReport(
 )
 
 /**
- * Validates a school's staffing and configuration before the CP-SAT solver runs.
+ * Validates a school's staffing and configuration before the Timefold solver runs.
  *
  * Ported from the zentro Java implementation. Rooms are not checked in this
  * version as room nodes are not yet modelled.

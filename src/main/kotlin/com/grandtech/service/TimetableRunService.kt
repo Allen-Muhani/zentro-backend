@@ -40,7 +40,7 @@ class TimetableRunService {
     @Inject
     lateinit var subjectRepository: SubjectRepository
 
-    /** CP-SAT solver that produces the timetable entries. */
+    /** Timefold solver that produces the timetable entries. */
     @Inject
     lateinit var solver: TimetableSolver
 
@@ -71,7 +71,7 @@ class TimetableRunService {
     }
 
     /**
-     * Loads school data, validates staffing, runs the CP-SAT solver,
+     * Loads school data, validates staffing, runs the Timefold solver,
      * and persists the result.
      * Called asynchronously by [com.grandtech.timetable.SolverWorker].
      *
