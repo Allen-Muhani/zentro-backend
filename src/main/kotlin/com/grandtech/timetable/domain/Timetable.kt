@@ -14,16 +14,18 @@ import com.grandtech.model.Teacher
  * The planning solution: the full weekly timetable for a school.
  *
  * Holds all [Lesson] planning entities and the problem facts (teachers,
- * subjects, streams, available days and periods) that Timefold uses to
- * assign day, period, and teacher to each lesson.
+ * subjects, streams, available time slots) that Timefold uses to assign
+ * a [TimeSlot] and a teacher to each lesson.
+ *
+ * [TimeSlot] combines day and period into a single planning variable value.
+ * This lets Timefold move a lesson's entire time assignment atomically,
+ * which improves convergence compared to separate day/period variables.
  *
  * Timefold maximises [score]; a score of `(0hard / Xsoft)` means all
- * hard constraints are satisfied. A negative hard score means the solution
- * is infeasible — [TimetableSolver] inspects the [ScoreManager] explanation
- * to extract actionable violation messages.
+ * hard constraints are satisfied.
  */
 @PlanningSolution
-open class Timetable {
+class Timetable {
 
     /**
      * All teachers for the school.
@@ -42,18 +44,12 @@ open class Timetable {
     lateinit var streams: List<Stream>
 
     /**
-     * All valid school days.
-     * Serves as the value range for [Lesson.day].
+     * All 40 valid (day, period) time slots for a five-day, eight-period week.
+     * Serves as the value range for [Lesson.timeSlot].
      */
     @ValueRangeProvider
-    val days: List<String> = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY")
-
-    /**
-     * All valid 1-based period numbers (1–8).
-     * Serves as the value range for [Lesson.period].
-     */
-    @ValueRangeProvider
-    val periods: List<Int> = (1..8).toList()
+    val timeSlots: List<TimeSlot> = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY")
+        .flatMap { day -> (1..8).map { period -> TimeSlot(day, period) } }
 
     /** All lessons to be scheduled; the solver assigns planning variables to each. */
     @PlanningEntityCollectionProperty
@@ -61,7 +57,7 @@ open class Timetable {
 
     /** The score computed by Timefold; null until solving begins. */
     @PlanningScore
-    open var score: HardSoftScore? = null
+    var score: HardSoftScore? = null
 
     /** No-arg constructor required by Timefold for class enhancement. */
     constructor()
