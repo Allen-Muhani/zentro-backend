@@ -9,7 +9,7 @@
     <properties>
         <kotlin.version>2.3.21</kotlin.version>
         <timefold.version>2.1.0</timefold.version>
-        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
@@ -124,7 +124,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <jvmTarget>17</jvmTarget>
+                    <jvmTarget>21</jvmTarget>
                     <javaParameters>true</javaParameters>
                     <compilerPlugins>
                         <plugin>all-open</plugin>
@@ -136,6 +136,8 @@
                         <option>all-open:annotation=jakarta.enterprise.context.Dependent</option>
                         <option>all-open:annotation=jakarta.inject.Singleton</option>
                         <option>all-open:annotation=jakarta.ws.rs.Path</option>
+                        <option>all-open:annotation=ai.timefold.solver.core.api.domain.solution.PlanningSolution</option>
+                        <option>all-open:annotation=ai.timefold.solver.core.api.domain.entity.PlanningEntity</option>
                     </pluginOptions>
                 </configuration>
                 <dependencies>

@@ -136,12 +136,13 @@ class TimetableRepository {
      */
     fun saveEntries(runId: String, entries: List<TimetableEntry>) {
         if (entries.isEmpty()) return
+        entries.chunked(50).forEach { batch ->
         driver.session().use { session ->
             // Create entry nodes and run→entry relationships in bulk via UNWIND
             session.run(
                 """
                 MATCH (r:TimetableRun {id: ${'$'}runId})
-                UNWIND ${'$'}entries AS e
+                UNWIND ${'$'}batch AS e
                 CREATE (en:TimetableEntry {
                     id:                 randomUUID(),
                     day:                e.day,
@@ -164,7 +165,7 @@ class TimetableRepository {
                 """.trimIndent(),
                 mapOf(
                     "runId" to runId,
-                    "entries" to entries.map { e ->
+                    "batch" to batch.map { e ->
                         mapOf(
                             "streamId" to e.streamId,
                             "subjectId" to e.subjectId,
@@ -179,6 +180,7 @@ class TimetableRepository {
                     },
                 ),
             )
+        }
         }
     }
 

@@ -72,7 +72,7 @@ class TimetableConstraintProvider : ConstraintProvider {
             Joiners.equal { l: Lesson -> l.period },
         )
             .penalize(HardSoftScore.ONE_HARD)
-            .asConstraint("HC1: Stream slot conflict")
+            .asConstraint("HC1 - Stream slot conflict")
 
     /**
      * HC2: A teacher may not be scheduled in two different places at the same
@@ -87,7 +87,7 @@ class TimetableConstraintProvider : ConstraintProvider {
         )
             .filter { l1, _ -> l1.teacher != null }
             .penalize(HardSoftScore.ONE_HARD)
-            .asConstraint("HC2: Teacher conflict")
+            .asConstraint("HC2 - Teacher conflict")
 
     /**
      * HC4: A teacher may only be assigned to lessons for subjects they are
@@ -100,7 +100,7 @@ class TimetableConstraintProvider : ConstraintProvider {
                     lesson.subject.id !in (lesson.teacher!!.subjectIds ?: emptyList<String>())
             }
             .penalize(HardSoftScore.ONE_HARD)
-            .asConstraint("HC4: Teacher not qualified for subject")
+            .asConstraint("HC4 - Teacher not qualified for subject")
 
     /**
      * HC5: All lessons for the same (stream, subject) must be taught by the
@@ -116,7 +116,7 @@ class TimetableConstraintProvider : ConstraintProvider {
                 l1.teacher != null && l2.teacher != null && l1.teacher != l2.teacher
             }
             .penalize(HardSoftScore.ONE_HARD)
-            .asConstraint("HC5: Multiple teachers for same subject in stream")
+            .asConstraint("HC5 - Multiple teachers for same subject in stream")
 
     /**
      * HC6a: A teacher's total lessons across the full week must not exceed
@@ -130,13 +130,13 @@ class TimetableConstraintProvider : ConstraintProvider {
                 { l: Lesson -> l.teacher },
                 ConstraintCollectors.count(),
             )
-            .filter { teacher: Teacher?, count: Int ->
+            .filter { teacher: Teacher?, count: Long ->
                 count > (teacher?.maxPeriodsPerWeek ?: 23)
             }
-            .penalize(HardSoftScore.ONE_HARD) { teacher: Teacher?, count: Int ->
+            .penalize(HardSoftScore.ONE_HARD) { teacher: Teacher?, count: Long ->
                 count - (teacher?.maxPeriodsPerWeek ?: 23)
             }
-            .asConstraint("HC6: Teacher weekly workload exceeded")
+            .asConstraint("HC6 - Teacher weekly workload exceeded")
 
     /**
      * HC6b: A teacher's lessons on any single day must not exceed their
@@ -151,13 +151,13 @@ class TimetableConstraintProvider : ConstraintProvider {
                 { l: Lesson -> l.day },
                 ConstraintCollectors.count(),
             )
-            .filter { teacher: Teacher?, _: String?, count: Int ->
+            .filter { teacher: Teacher?, _: String?, count: Long ->
                 count > (teacher?.maxPeriodsPerDay ?: 6)
             }
-            .penalize(HardSoftScore.ONE_HARD) { teacher: Teacher?, _: String?, count: Int ->
+            .penalize(HardSoftScore.ONE_HARD) { teacher: Teacher?, _: String?, count: Long ->
                 count - (teacher?.maxPeriodsPerDay ?: 6)
             }
-            .asConstraint("HC6: Teacher daily workload exceeded")
+            .asConstraint("HC6 - Teacher daily workload exceeded")
 
     /**
      * HC8: A subject may appear at most [Subject.maxPeriodsPerDay] times in
@@ -175,9 +175,9 @@ class TimetableConstraintProvider : ConstraintProvider {
                 lessons.size > lessons.first().subject.maxPeriodsPerDay
             }
             .penalize(HardSoftScore.ONE_HARD) { _: String, lessons: List<Lesson> ->
-                lessons.size - lessons.first().subject.maxPeriodsPerDay
+                (lessons.size - lessons.first().subject.maxPeriodsPerDay).toLong()
             }
-            .asConstraint("HC8: Subject daily cap exceeded")
+            .asConstraint("HC8 - Subject daily cap exceeded")
 
     /**
      * HC9: A subject may not appear on both sides of a break boundary within
@@ -199,7 +199,7 @@ class TimetableConstraintProvider : ConstraintProvider {
                 (p1 to p2) in breakPairs || (p2 to p1) in breakPairs
             }
             .penalize(HardSoftScore.ONE_HARD)
-            .asConstraint("HC9: Subject spans break boundary")
+            .asConstraint("HC9 - Subject spans break boundary")
     }
 
     /**
@@ -221,18 +221,16 @@ class TimetableConstraintProvider : ConstraintProvider {
                 ConstraintCollectors.toList(),
             )
             .filter { _: String, lessons: List<Lesson> ->
-                val noValidDouble = lessons.none { l1 ->
-                    lessons.any { l2 ->
-                        l1 !== l2 &&
-                            l1.day != null && l1.day == l2.day &&
-                            l1.period != null && l2.period != null &&
-                            (minOf(l1.period!!, l2.period!!) to maxOf(l1.period!!, l2.period!!)) in validDoublePairs
-                    }
+                val periodsByDay = lessons
+                    .filter { it.day != null && it.period != null }
+                    .groupBy({ it.day!! }, { it.period!! })
+                periodsByDay.values.none { periods ->
+                    val periodSet = periods.toHashSet()
+                    validDoublePairs.any { (a, b) -> a in periodSet && b in periodSet }
                 }
-                noValidDouble
             }
             .penalize(HardSoftScore.ONE_HARD)
-            .asConstraint("HC10: Required double period missing")
+            .asConstraint("HC10 - Required double period missing")
     }
 
     /**
@@ -259,7 +257,7 @@ class TimetableConstraintProvider : ConstraintProvider {
                     (minOf(l1.period!!, l2.period!!) to maxOf(l1.period!!, l2.period!!)) in validPairs
             }
             .penalize(HardSoftScore.ONE_HARD)
-            .asConstraint("HC11: Teacher teaches different subjects consecutively in same stream")
+            .asConstraint("HC11 - Teacher teaches different subjects consecutively in same stream")
     }
 
     // ── Soft constraints ──────────────────────────────────────────────────────
@@ -277,7 +275,7 @@ class TimetableConstraintProvider : ConstraintProvider {
                 lesson.subject.type in coreSubjectTypes && (lesson.period ?: 0) >= 5
             }
             .penalize(HardSoftScore.ONE_SOFT) { _: Lesson -> 10 }
-            .asConstraint("SC1: Core subject in afternoon")
+            .asConstraint("SC1 - Core subject in afternoon")
     }
 
     /**
@@ -292,7 +290,7 @@ class TimetableConstraintProvider : ConstraintProvider {
                 lesson.subject.id == CAS && (lesson.period ?: -1) !in beforeBreakPeriods
             }
             .penalize(HardSoftScore.ONE_SOFT) { _: Lesson -> 8 }
-            .asConstraint("SC2: CAS not placed before break")
+            .asConstraint("SC2 - CAS not placed before break")
     }
 
     /**
@@ -304,5 +302,5 @@ class TimetableConstraintProvider : ConstraintProvider {
         factory.forEach(Lesson::class.java)
             .filter { it.subject.periodsPerWeek > 1 }
             .penalize(HardSoftScore.ONE_SOFT) { _: Lesson -> 3 }
-            .asConstraint("SC3: Subject clustering")
+            .asConstraint("SC3 - Subject clustering")
 }
